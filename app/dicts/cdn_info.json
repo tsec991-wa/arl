@@ -233,7 +233,7 @@
             "akamaized.net",
             "akamai.net"
         ],
-        "ip_cidr":[
+        "ip_cidr": [
 
         ]
     },
@@ -379,7 +379,7 @@
     },
     {
         "name": "奇安信网站卫士",
-        "cname_domain":[
+        "cname_domain": [
             "360cloudwaf.com",
             "360anyu.com",
             "360safedns.com",
@@ -389,26 +389,26 @@
     },
     {
         "name": "深信服云盾",
-        "cname_domain":[
+        "cname_domain": [
             "sangfordns.com"
         ]
     },
     {
         "name": "绿盟云 WAF",
-        "cname_domain":[
+        "cname_domain": [
             "nscloudwaf.com"
         ]
     },
     {
         "name": "华为云waf",
-        "cname_domain":[
+        "cname_domain": [
             "huaweicloudwaf.com",
             "huaweicloud.com"
         ]
     },
     {
         "name":"华为云CDN",
-        "cname_domain":[
+        "cname_domain": [
             "cdnhwc1.com",
             "cdnhwc2.com",
             "cdnhwc3.com"
@@ -416,20 +416,20 @@
     },
     {
         "name":"360 云 CDN (由奇安信运营)",
-        "cname_domain":[
+        "cname_domain": [
             "qhcdn.com"
         ]
     },
     {
         "name":"360 云 CDN (由奇虎 360 运营)",
-        "cname_domain":[
+        "cname_domain": [
             "qihucdn.com",
             "60cdn.com"
         ]
     },
     {
         "name":"七牛云",
-        "cname_domain":[
+        "cname_domain": [
             "qbox.me",
             "qiniu.com",
             "iniudns.com"
@@ -437,7 +437,7 @@
     },
     {
         "name":"京东云 CDN",
-        "cname_domain":[
+        "cname_domain": [
             "jcloud-cdn.com",
             "jcloudlb.com",
             "qianxun.com",
@@ -447,14 +447,14 @@
     },
     {
         "name":"腾正安全加速（原 15CDN）",
-        "cname_domain":[
+        "cname_domain": [
             "15cdn.com",
             "tzcdn.cn"
         ]
     },
     {
         "name":"腾讯云 CDN",
-        "cname_domain":[
+        "cname_domain": [
             "cdntip.com",
             "dnsv1.com",
             "tencdns.net",
@@ -463,7 +463,7 @@
     },
     {
         "name":"蓝盾云CDN",
-        "cname_domain":[
+        "cname_domain": [
             "cloudfence.cn"
         ]
     }
