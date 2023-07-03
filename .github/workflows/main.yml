@@ -30,8 +30,8 @@ jobs:
         run: |
           pwd
           mkdir -p docker/GeoLite2/
-          wget -O docker/GeoLite2/GeoLite2-ASN.mmdb  https://github.com/1c3z/arl_files/raw/master/GeoLite2-ASN.mmdb
-          wget -O docker/GeoLite2/GeoLite2-City.mmdb  https://github.com/1c3z/arl_files/raw/master/GeoLite2-City.mmdb
+          wget -O docker/GeoLite2/GeoLite2-ASN.mmdb  https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-ASN.mmdb
+          wget -O docker/GeoLite2/GeoLite2-City.mmdb  https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-City.mmdb
           ls -al docker/GeoLite2
 
       - name: Download ncrack
