@@ -61,6 +61,9 @@ QUERY_PLUGIN:
     api_key:
     max_page: 20
     enable: false
+  chaos:
+    api_key:
+    enable: false
 
 
 #钉钉消息推送配置
