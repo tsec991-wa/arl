@@ -87,6 +87,7 @@ class AssetSiteUpdateTask(CommonTask):
         self.set_end_time()
 
 
+# 资产站点更新监控任务
 def asset_site_update_task(task_id, scope_id, scheduler_id):
     from app.scheduler import update_job_run
 
@@ -137,6 +138,7 @@ class AddAssetSiteTask(RiskCruising):
         self.common_run()
 
 
+# 添加资产站点任务
 def run_add_asset_site_task(task_id):
     query = {"_id": ObjectId(task_id)}
     task_data = utils.conn_db('task').find_one(query)

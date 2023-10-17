@@ -18,9 +18,10 @@ class TestDomain(unittest.TestCase):
         self.assertTrue(len(data[0]["finger"]) >= 1)
 
     def test_fetch_data(self):
-        sites = ["http://www.baidu.com/"]
+        sites = ["https://mtp.myoas.com"]
         data = services.fetch_site(sites, concurrency=2)
-        print(data)
+        self.assertTrue(len(data) == 2)
+        self.assertTrue(data[1]["status"] == 200)
 
 
 if __name__ == '__main__':

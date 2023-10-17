@@ -32,13 +32,12 @@ class BaseThread(object):
 
         except BaseException as e:
             logger.warning("BaseException on {}".format(url))
-            self.semaphore.release()
             raise e
-
-        self.semaphore.release()
+        finally:
+            self.semaphore.release()
 
     def _run(self):
-        deque = collections.deque(maxlen=2000)
+        deque = collections.deque(maxlen=5000)
         cnt = 0
 
         for target in self.targets:

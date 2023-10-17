@@ -46,6 +46,40 @@ class TestUtilsPush(unittest.TestCase):
 
         return self._ip_data
 
+    @property
+    def domain_asset_map(self):
+        asset_map = {
+            "site": self.site_data,
+            "domain": self.domain_data,
+            "task_name": "灯塔测试域名"
+        }
+        return asset_map
+
+    @property
+    def domain_asset_counter(self):
+        asset_counter = {
+            "site": 10,
+            "domain": 10
+        }
+        return asset_counter
+
+    @property
+    def ip_asset_map(self):
+        asset_map = {
+            "site": self.site_data,
+            "ip": self.ip_data,
+            "task_name": "灯塔测试 IP"
+        }
+        return asset_map
+
+    @property
+    def ip_asset_counter(self):
+        asset_counter = {
+            "site": 10,
+            "ip": 10
+        }
+        return asset_counter
+
     def assert_dingding_config(self):
         self.assertTrue(Config.DINGDING_SECRET)
         self.assertTrue(Config.DINGDING_ACCESS_TOKEN)
@@ -54,68 +88,54 @@ class TestUtilsPush(unittest.TestCase):
         self.assertTrue(Config.EMAIL_PASSWORD)
         self.assertTrue(Config.EMAIL_USERNAME)
 
-    def test_message_push_domain(self):
-        self.assert_dingding_config()
-        asset_map = {
-            "site": self.site_data,
-            "domain": self.domain_data,
-            "task_name": "灯塔测试域名"
-        }
-        asset_counter = {
-            "site": 10,
-            "domain": 10
-        }
-        p = push.Push(asset_map=asset_map, asset_counter=asset_counter)
-        ret = p.push_dingding()
-        self.assertTrue(ret)
+    def assert_feishu_config(self):
+        self.assertTrue(Config.FEISHU_SECRET)
+        self.assertTrue(Config.FEISHU_WEBHOOK)
 
-    def test_message_push_ip(self):
+    def assert_wx_work_config(self):
+        self.assertTrue(Config.WX_WORK_WEBHOOK)
+
+    def test_push_dingding(self):
         self.assert_dingding_config()
 
-        asset_map = {
-            "site": self.site_data,
-            "ip": self.ip_data,
-            "task_name": "灯塔测试 IP"
-        }
-        asset_counter = {
-            "site": 10,
-            "ip": 10
-        }
-        p = push.Push(asset_map=asset_map, asset_counter=asset_counter)
-        ret = p.push_dingding()
+        push_domain = push.Push(asset_map=self.domain_asset_map, asset_counter=self.domain_asset_counter)
+        ret = push_domain.push_dingding()
         self.assertTrue(ret)
 
-    def test_push_email_domain(self):
-        self.assert_email_config()
-        asset_map = {
-            "site": self.site_data,
-            "domain": self.domain_data,
-            "task_name": "灯塔测试域名"
-        }
-        asset_counter = {
-            "site": 10,
-            "domain": 10
-        }
-
-        p = push.Push(asset_map=asset_map, asset_counter=asset_counter)
-        ret = p.push_email()
+        push_ip = push.Push(asset_map=self.ip_asset_map, asset_counter=self.ip_asset_counter)
+        ret = push_ip.push_dingding()
         self.assertTrue(ret)
 
-    def test_push_email_ip(self):
+    def test_push_email(self):
         self.assert_email_config()
 
-        asset_map = {
-            "site": self.site_data,
-            "ip": self.ip_data,
-            "task_name": "灯塔测试 IP"
-        }
-        asset_counter = {
-            "site": 10,
-            "ip": 10
-        }
+        push_domain = push.Push(asset_map=self.domain_asset_map, asset_counter=self.domain_asset_counter)
+        ret = push_domain.push_email()
+        self.assertTrue(ret)
 
-        p = push.Push(asset_map=asset_map, asset_counter=asset_counter)
-        ret = p.push_email()
+        push_ip = push.Push(asset_map=self.ip_asset_map, asset_counter=self.ip_asset_counter)
+        ret = push_ip.push_email()
+        self.assertTrue(ret)
+
+    def test_push_feishu(self):
+        self.assert_feishu_config()
+
+        push_domain = push.Push(asset_map=self.domain_asset_map, asset_counter=self.domain_asset_counter)
+        ret = push_domain.push_feishu()
+        self.assertTrue(ret)
+
+        push_ip = push.Push(asset_map=self.ip_asset_map, asset_counter=self.ip_asset_counter)
+        ret = push_ip.push_feishu()
+        self.assertTrue(ret)
+
+    def test_wx_work_push(self):
+        self.assert_wx_work_config()
+        push_domain = push.Push(asset_map=self.domain_asset_map, asset_counter=self.domain_asset_counter)
+        ret = push_domain.push_wx_work()
+        self.assertTrue(ret)
+
+        push_ip = push.Push(asset_map=self.ip_asset_map, asset_counter=self.ip_asset_counter)
+        ret = push_ip.push_wx_work()
         self.assertTrue(ret)
 
 

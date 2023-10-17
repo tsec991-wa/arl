@@ -15,8 +15,9 @@ class TestAssetSiteMonitor(unittest.TestCase):
         asset_site_monitor(scope_id="60b756b56591e7489b977a29")
 
     def test_monitor_job(self):
-        submit_asset_site_monitor_job(scope_id="6168130a6591e724d0903aa7",
-                                      name="测试站点监控", scheduler_id="60b756b56591e7489b977a29")
+        submit_asset_site_monitor_job(scope_id="64c26c48315d7c954fe370c2",
+                                      name="测试站点监控", scheduler_id="62e20a256591e72719cc5294")
+
 
 
 if __name__ == '__main__':

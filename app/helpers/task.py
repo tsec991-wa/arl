@@ -116,6 +116,7 @@ def submit_task(task_data):
         TaskType.ASSET_SITE_UPDATE: CeleryAction.ASSET_SITE_UPDATE,
         TaskType.FOFA: CeleryAction.FOFA_TASK,
         TaskType.ASSET_SITE_ADD: CeleryAction.ADD_ASSET_SITE_TASK,
+        TaskType.ASSET_WIH_UPDATE: CeleryAction.ASSET_WIH_UPDATE,
     }
 
     task_type = task_data["type"]

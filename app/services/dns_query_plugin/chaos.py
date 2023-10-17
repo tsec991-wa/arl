@@ -13,7 +13,6 @@ class Query(DNSQueryBase):
     def init_key(self, api_key=None):
         self.api_key = api_key
 
-
     def sub_domains(self, target):
         headers = {
             "Authorization": self.api_key

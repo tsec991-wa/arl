@@ -59,6 +59,38 @@ class ARLIPExport(ARLResource):
         return response
 
 
+@ns.route('/export_domain/')
+class ARLIPExportDomain(ARLResource):
+    parser = get_arl_parser(base_search_fields, location='args')
+
+    @auth
+    @ns.expect(parser)
+    def get(self):
+        """
+        从 IP 中导出域名
+        """
+        args = self.parser.parse_args()
+        response = self.send_export_file_attr(args=args, collection="ip", field="domain")
+
+        return response
+
+
+@ns.route('/export_ip/')
+class ARLIPExportIp(ARLResource):
+    parser = get_arl_parser(base_search_fields, location='args')
+
+    @auth
+    @ns.expect(parser)
+    def get(self):
+        """
+        从 IP 中导出 IP
+        """
+        args = self.parser.parse_args()
+        response = self.send_export_file_attr(args=args, collection="ip", field="ip")
+
+        return response
+
+
 delete_ip_fields = ns.model('deleteIpFields',  {
     '_id': fields.List(fields.String(required=True, description="IP _id"))
 })

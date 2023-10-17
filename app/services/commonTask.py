@@ -4,11 +4,10 @@ from bson import ObjectId
 from app import utils
 from app import services
 from app.config import Config
-from app.helpers import get_url_by_task_id
 from app.modules import CollectSource, WebSiteFetchStatus, WebSiteFetchOption
 from app.services.nuclei_scan import nuclei_scan
+from app.services import run_risk_cruising, BaseUpdateTask
 logger = utils.get_logger()
-from app.services import fetchCert, run_risk_cruising, run_sniffer
 
 
 # 任务类中一些相关公共类
@@ -82,26 +81,9 @@ class CommonTask(object):
         self.sync_asset()
 
 
-class BaseUpdateTask(object):
-    def __init__(self, task_id: str):
-        self.task_id = task_id
-
-    def update_services(self, service_name: str, elapsed: float):
-        elapsed = "{:.2f}".format(elapsed)
-        self.update_task_field("status", service_name)
-        query = {"_id": ObjectId(self.task_id)}
-        update = {"$push": {"service": {"name": service_name, "elapsed": float(elapsed)}}}
-        utils.conn_db('task').update_one(query, update)
-
-    def update_task_field(self, field=None, value=None):
-        query = {"_id": ObjectId(self.task_id)}
-        update = {"$set": {field: value}}
-        utils.conn_db('task').update_one(query, update)
-
-
 # *** 对用户提交的站点或者是发现的站点进行后续处理
 class WebSiteFetch(object):
-    def __init__(self, task_id: str, sites: list, options: dict):
+    def __init__(self, task_id: str, sites: list, options: dict, scope_domain: list = None):
         self.task_id = task_id
         self.sites = sites  # ** 这个是用户提交的目标
         self.options = options
@@ -109,10 +91,25 @@ class WebSiteFetch(object):
         self.site_info_list = []  # *** 这个是来自 services.fetch_site 的结果
         self.available_sites = []  # *** 这个是存活的站点
         self.web_analyze_map = dict()
+        self.wih_domain_set = set()  # 用于保存来自wih的域名，已添加的域名不再添加
+        self.wih_record_set = set()  # 用于保存来自wih的记录，已添加的记录不再添加
 
+        # 用于判断应该收集的子域名
+        if not scope_domain:
+            scope_domain = []
+
+        self.scope_domain = scope_domain
         self.page_url_set = set()
         self.search_engines_result = dict()
         self._poc_sites = None  # 用于PoC 执行， 文件目录爆破 的目标
+        self._task_domain_set = None  # 用于保存任务中的域名
+
+    @property
+    def task_domain_set(self):
+        if self._task_domain_set is None:
+            self._task_domain_set = set(utils.arl.get_domain_by_id(self.task_id))
+
+        return self._task_domain_set
 
     def site_identify(self):
         # ** 调用指纹识别
@@ -256,6 +253,7 @@ class WebSiteFetch(object):
         logger.info("end run {} ({:.2f}s), {}".format(name, elapse, self.__str__()))
 
     def update_page_url_set(self):
+        from app.helpers import get_url_by_task_id
         # page_url_set 从数据库读取搜索引擎爬取到的URL
         urls = get_url_by_task_id(self.task_id)
         self.page_url_set |= set(urls)
@@ -267,6 +265,40 @@ class WebSiteFetch(object):
             entry_urls.append(u)
             self.search_engines_result[ret_url] = entry_urls
 
+    def add_wih_domain_set(self, record):
+        if self.scope_domain:
+            if record.recordType == "domain":
+                # 如果是域名，需要判断是否在域名范围内
+                if not domain_in_scope_domain(record.content, self.scope_domain):
+                    return
+
+                if utils.check_domain_black(record.content):
+                    return
+
+                # 在域名范围内，需要判断是否已经存在
+                if record.content in self.wih_domain_set:
+                    return
+
+                # 已经保存的域名，不再保存
+                if record.content in self.wih_domain_set:
+                    return
+
+                self.wih_domain_set.add(record.content)
+
+    def run_web_info_hunter(self):
+        records = set(services.run_wih(self.sites))
+        for record in records:
+            # 先判断记录是否已经存在
+            if record.fnv_hash in self.wih_record_set:
+                continue
+
+            self.add_wih_domain_set(record)
+
+            item = record.dump_json()
+            item["task_id"] = self.task_id
+            utils.conn_db('wih').insert_one(item)
+            self.wih_record_set.add(record.fnv_hash)
+
     def run(self):
         # *** 对站点进行基本信息的获取
         self.run_func(WebSiteFetchStatus.FETCH_SITE, self.fetch_site)
@@ -277,6 +309,9 @@ class WebSiteFetch(object):
 
         """ *** 保存站点信息到数据库 """
         self.save_site_info()
+
+        # 清空，节省内存
+        self.site_info_list = []
 
         """ *** 站点截图 """
         if self.options.get(WebSiteFetchOption.SITE_CAPTURE):
@@ -294,6 +329,17 @@ class WebSiteFetch(object):
         """ *** 对站点运行 nuclei """
         if self.options.get(WebSiteFetchOption.NUCLEI_SCAN):
             self.run_func(WebSiteFetchStatus.NUCLEI_SCAN, self.nuclei_scan)
+
+        """ *** 对站点调用 WebInfoHunter """
+        if self.options.get(WebSiteFetchOption.Info_Hunter):
+            self.run_func(WebSiteFetchStatus.Info_Hunter, self.run_web_info_hunter)
+
+
+def domain_in_scope_domain(domain: str, scope_domain: list):
+    for scope in scope_domain:
+        if domain.endswith("." + scope):
+            return True
+    return False
 
 
 def build_url_item(site, task_id, source):

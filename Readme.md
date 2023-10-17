@@ -26,32 +26,27 @@
 10. 站点变化监控
 11. 文件泄漏等风险检测
 12. nuclei PoC 调用
+13. [WebInfoHunter](https://tophanttechnology.github.io/ARL-doc/function_desc/web_info_hunter/) 调用和监控
 
 ### 系统要求
 
-目前暂不支持Windows。Linux和MAC建议采用Docker运行，系统配置最低2核4G。  
-由于自动资产发现过程中会有大量的的发包，建议采用云服务器可以带来更好的体验。  
+目前暂不支持Windows，初次体验可采用Docker方式运行，长期使用建议采用源码安装方式运行。系统配置建议：CPU:4线程 内存:8G 带宽:10M。  
+由于自动资产发现过程中会有大量的的发包，建议采用云服务器可以带来更好的体验。
 
 ### Docker 启动
 
-```
-git clone https://github.com/TophantTechnology/ARL
-cd ARL/docker/
-docker volume create arl_db
-docker-compose pull
-docker-compose up -d 
-```
 
-或者直接下载`docker-compose`配置文件启动
 ```
+cd /opt/
 mkdir docker_arl
-wget -O docker_arl/docker.zip https://github.com/TophantTechnology/ARL/releases/download/v2.5.5/docker.zip
+wget -O docker_arl/docker.zip https://github.com/TophantTechnology/ARL/releases/download/v2.6/docker.zip
 cd docker_arl
 unzip -o docker.zip
 docker-compose pull
 docker volume create arl_db
 docker-compose up -d
 ```
+
 
 Ubuntu 下可以直接执行 `apt-get install docker.io docker-compose -y` 安装相关依赖
 
@@ -99,7 +94,7 @@ Ubuntu 下可以直接执行 `apt-get install docker.io docker-compose -y` 安�
 | 4    | 端口扫描类型    | ALL：全部端口，TOP1000：常用top 1000端口，TOP100：常用top 100端口，测试：少数几个端口 |
 | 5    | 域名爆破        | 是否开启域名爆破                                                                   |
 | 6    | DNS字典智能生成 | 根据已有的域名生成字典进行爆破                                                      |
-| 7    | 域名查询插件    |  已支持的数据源为12个，`alienvault`, `certspotter`,`crtsh`,`fofa`,`hunter` 等        |
+| 7    | 域名查询插件    |  已支持的数据源为13个，`alienvault`, `certspotter`,`crtsh`,`fofa`,`hunter` 等        |
 | 8    | ARL 历史查询    | 对arl历史任务结果进行查询用于本次任务                                                |
 | 9    | 端口扫描        | 是否开启端口扫描，不开启站点会默认探测80,443                                         |
 | 10   | 服务识别        | 是否进行服务识别，有可能会被防火墙拦截导致结果为空                                     |
@@ -113,6 +108,8 @@ Ubuntu 下可以直接执行 `apt-get install docker.io docker-compose -y` 安�
 | 18   | 文件泄露        | 对站点进行文件泄露检测，会被WAF拦截                                                  |
 | 19   | Host 碰撞        | 对vhost配置不当进行检测                                                |
 | 20    | nuclei 调用    | 调用nuclei 默认PoC 对站点进行检测 ，会被WAF拦截，请谨慎使用该功能                |
+| 21   | WIH 调用      | 调用 WebInfoHunter 工具在JS中收集域名,AK/SK等信息                     |
+| 22   | WIH 监控任务   | 对资产分组中的站点周期性 调用 WebInfoHunter 工具在JS中域名等信息进行监控  |
 
 ### 配置参数说明
 
@@ -137,7 +134,8 @@ Docker环境配置文件路径 `docker/config-docker.yaml`
 | ARL.DOMAIN_BRUTE_CONCURRENT     | 域名爆破并发数配置      |
 | ARL.ALT_DNS_CONCURRENT     | 组合生成的域名爆破并发数      |
 | PROXY.HTTP_URL     | HTTP代理URL设置      |
-
+| FEISHU | 飞书消息推送配置 |
+| WXWORK | 企业微信消息推送 |
 
 
 ### 忘记密码重置

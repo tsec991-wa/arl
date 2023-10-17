@@ -68,6 +68,7 @@ def urlsimilar(url):
     url_value = hash(url_hash.hexdigest()) % hash_size
     return url_value
 
+
 def get_hostname(url):
     if "://" not in url:
         url = "http://" + url
@@ -89,8 +90,6 @@ def rm_similar_url(all_url):
     return filther_similar_url
 
 
-
-
 def normal_url(url):
     scheme_map = {
         'http': 80,
@@ -107,7 +106,6 @@ def normal_url(url):
 
     if o.path == "":
         path = "/"
-
 
     if o.port == scheme_map[o.scheme] or o.port is None:
         ret_url = "{}://{}{}".format(scheme, hostname, path)

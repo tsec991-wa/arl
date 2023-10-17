@@ -8,6 +8,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from app.utils import http_req, get_logger
 from app.config import Config
+
 logger = get_logger()
 
 
@@ -110,6 +111,42 @@ class Push(object):
             return False
         return True
 
+    def _push_wx_work(self):
+        tpl = ""
+        if self.domain_len > 0:
+            tpl = "[{}]新发现域名 `{}` , 站点 `{}`\n".format(self.task_name, self.domain_len, self.site_len)
+            tpl = "{}\n{}".format(tpl, dict2dingding_mark(self.domain_info_list))
+
+        if self.ip_len > 0:
+            tpl = "[{}]新发现 IP `{}` , 站点 `{}`\n".format(self.task_name, self.ip_len, self.site_len)
+            tpl = "{}\n{}".format(tpl, dict2dingding_mark(self.ip_info_list))
+
+        tpl += "\n"
+        tpl = "{}\n{}".format(tpl, dict2dingding_mark(self.site_info_list))
+        ding_out = wx_work_send(msg=tpl, webhook_url=Config.WX_WORK_WEBHOOK)
+        if ding_out["errcode"] != 0:
+            logger.warning("发送失败 \n{}\n {}".format(tpl, ding_out))
+            return False
+        return True
+
+    def _push_feishu(self):
+        tpl = ""
+        if self.domain_len > 0:
+            tpl = "[{}]新发现域名 {}, 站点 {}\n".format(self.task_name, self.domain_len, self.site_len)
+            tpl = "{}{}".format(tpl, dict2dingding_mark(self.domain_info_list))
+
+        if self.ip_len > 0:
+            tpl = "[{}]新发现 IP {}, 站点{}\n".format(self.task_name, self.ip_len, self.site_len)
+            tpl = "{}{}".format(tpl, dict2dingding_mark(self.ip_info_list))
+
+        tpl = "{}\n{}".format(tpl, dict2dingding_mark(self.site_info_list))
+        feishu_out = feishu_send(msg=tpl, webhook_url=Config.FEISHU_WEBHOOK,
+                                 secret=Config.FEISHU_SECRET)
+        if feishu_out["code"] != 0:
+            logger.warning("发送失败 \n{}\n {}".format(tpl[:50], feishu_out))
+            return False
+        return True
+
     def _push_email(self):
         html = ""
         if self.domain_len > 0:
@@ -152,12 +189,32 @@ class Push(object):
         except Exception as e:
             logger.warning(self.task_name, e)
 
+    def push_feishu(self):
+        try:
+            if Config.FEISHU_WEBHOOK and Config.FEISHU_SECRET:
+                self._push_feishu()
+                logger.info("send feishu succ")
+                return True
+        except Exception as e:
+            logger.warning(self.task_name, e)
+
+    def push_wx_work(self):
+        try:
+            if Config.WX_WORK_WEBHOOK:
+                self._push_wx_work()
+                logger.info("send wx work succ")
+                return True
+        except Exception as e:
+            logger.warning(self.task_name, e)
+
 
 def message_push(asset_map, asset_counter):
     logger.info("ARL push run")
     p = Push(asset_map=asset_map, asset_counter=asset_counter)
     p.push_dingding()
     p.push_email()
+    p.push_feishu()
+    p.push_wx_work()
 
 
 def dict2dingding_mark(info_list):
@@ -250,3 +307,42 @@ def dict2table(info_list):
 
     return html
 
+
+def feishu_send(msg, webhook_url, secret, title="灯塔消息推送"):
+    timestamp = str(int(time.time()))
+    string_to_sign = '{}\n{}'.format(timestamp, secret)
+    hmac_code = hmac.new(string_to_sign.encode("utf-8"), digestmod=hashlib.sha256).digest()
+    # 对结果进行base64处理
+    sign = base64.b64encode(hmac_code).decode('utf-8')
+
+    send_data = {
+        "timestamp": timestamp,
+        "sign": sign,
+        "msg_type": "post",
+        "content": {
+            "post": {
+                "zh_cn": {
+                    "title": title,
+                    "content": [
+                        [{
+                            "tag": "text",
+                            "text": msg
+                        }]
+                    ]
+                }
+            }
+        }
+    }
+    conn = http_req(webhook_url, method='post', json=send_data)
+    return conn.json()
+
+
+def wx_work_send(msg, webhook_url):
+    send_data = {
+        "msgtype": "markdown",
+        "markdown":{
+            "content": msg
+        }
+    }
+    conn = http_req(webhook_url, method='post', json=send_data)
+    return conn.json()

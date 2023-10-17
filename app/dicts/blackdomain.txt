@@ -36,3 +36,9 @@ media.gamer.qq.com
 .meeting.tencent.com
 .txmeeting.tencent.com
 .powerfl.qq.com
+.livelink.qq.com
+.odp.qq.com
+.identity.tencent.com
+.account.tencent.com
+.sdc.tencent.com
+.workspace.tencent.com

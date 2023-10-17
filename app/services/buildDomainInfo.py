@@ -7,10 +7,8 @@ logger = utils.get_logger()
 
 class BuildDomainInfo(BaseThread):
     def __init__(self, domains, concurrency=6):
-        super().__init__(domains, concurrency = concurrency)
-
+        super().__init__(domains, concurrency=concurrency)
         self.domain_info_list = []
-
 
     def work(self, target):
         domain = target

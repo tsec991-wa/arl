@@ -180,3 +180,20 @@ class BatchExportAssetIP(ARLResource):
         response = self.send_scope_batch_export_file(scope_id_list, "asset_site")
 
         return response
+
+
+@ns.route('/asset_wih/')
+class BatchExportAssetWIH(ARLResource):
+
+    @auth
+    @ns.expect(scope_batch_export_fields)
+    def post(self):
+        """
+        资产分组中 WIH 批量导出
+        """
+        args = self.parse_args(scope_batch_export_fields)
+        scope_id_list = args.get("scope_id", [])
+
+        response = self.send_scope_batch_export_file(scope_id_list, "asset_wih")
+
+        return response

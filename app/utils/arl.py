@@ -3,6 +3,7 @@ from .conn import conn_db
 from .IPy import IP
 import re
 
+
 def get_task_ids(domain):
     query = {"target": domain}
     task_ids = []
@@ -86,7 +87,7 @@ def task_statistic(task_id=None):
     ret = dict()
     table_list = ['site', 'domain', 'ip', 'cert', 'service', 'fileleak']
     table_list.extend(['url', 'vuln', 'npoc_service', 'cip'])
-    table_list.extend(["nuclei_result", "stat_finger"])
+    table_list.extend(["nuclei_result", "stat_finger", "wih"])
     for table in table_list:
         cnt = conn_db(table).count_documents(query)
         stat_key = table + "_cnt"

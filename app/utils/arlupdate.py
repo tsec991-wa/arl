@@ -19,34 +19,34 @@ def update_task_tag():
 def create_index():
     index_map = {
         "cert": "task_id",
-        "domain": "task_id",
+        "domain": ["task_id", "domain"],
         "fileleak": "task_id",
         "ip": "task_id",
         "npoc_service": "task_id",
-        "site": "task_id",
+        "site": ["task_id","status", "title", "hostname", "site", "http_server"],
         "service": "task_id",
         "url": "task_id",
         "vuln": "task_id",
         "asset_ip": "scope_id",
         "asset_site": "scope_id",
-        "asset_domain": "scope_id",
+        "asset_domain": ["scope_id","domain"],
         "github_result": "github_task_id",
-        "github_monitor_result": "github_scheduler_id"
+        "github_monitor_result": "github_scheduler_id",
+        "wih": ["task_id", "record_type", "fnv_hash"],
     }
     for table in index_map:
-        conn_db(table).create_index(index_map[table])
-
-
-# 对site 集合中少数字段创建索引
-def create_site_index():
-    fields = ["status", "title", "hostname", "site", "http_server"]
-    for field in fields:
-        conn_db("site").create_index(field)
+        if isinstance(index_map[table], list):
+            for index in index_map[table]:
+                conn_db(table).create_index(index)
+        else:
+            conn_db(table).create_index(index_map[table])
 
 
 def arl_update():
     if is_run_flask_routes():
         return
+
+    npoc_info_update()
 
     update_lock = os.path.join(Config.TMP_PATH, 'arl_update.lock')
     if os.path.exists(update_lock):
@@ -54,9 +54,17 @@ def arl_update():
 
     update_task_tag()
     create_index()
-    create_site_index()
 
     open(update_lock, 'a').close()
+
+
+def npoc_info_update():
+    from app.services.npoc import NPoC
+    if conn_db('poc').count() > 0:
+        return
+
+    n = NPoC()
+    n.sync_to_db()
 
 
 # 判断是否是-m flask routes 模式运行

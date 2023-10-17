@@ -2,6 +2,7 @@ from .ipInfo import PortInfo, IPInfo
 from .baseInfo import BaseInfo
 from .domainInfo import DomainInfo
 from .pageInfo import PageInfo
+from .wihRecord import WihRecord
 from app.config import Config
 
 
@@ -75,6 +76,9 @@ class TaskType:
     """资产站点添加"""
     ASSET_SITE_ADD = "asset_site_add"
 
+    """资产 WIH 更新"""
+    ASSET_WIH_UPDATE = "asset_wih_update"
+
 
 class SiteAutoTag:
     ENTRY = "入口"
@@ -114,6 +118,7 @@ class WebSiteFetchOption:
     POC_RUN = "poc_config"
     SITE_IDENTIFY = "site_identify"
     NUCLEI_SCAN = "nuclei_scan"  # nuclei 扫描
+    Info_Hunter = "web_info_hunter"  # 对 JS 调用WebInfoHunter
 
 
 class WebSiteFetchStatus:
@@ -126,6 +131,7 @@ class WebSiteFetchStatus:
     SITE_IDENTIFY = "site_identify"
     POC_RUN = "poc_run"
     NUCLEI_SCAN = "nuclei_scan"
+    Info_Hunter = "web_info_hunter"  # 对 JS 调用WebInfoHunter
 
 
 class CeleryAction:
@@ -163,6 +169,9 @@ class CeleryAction:
 
     """资产站点添加站点"""
     ADD_ASSET_SITE_TASK = "add_asset_site_task"
+
+    """资产WIH更新任务"""
+    ASSET_WIH_UPDATE = "asset_wih_update"
 
 
 error_map = {

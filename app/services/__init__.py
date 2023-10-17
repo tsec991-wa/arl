@@ -18,3 +18,6 @@ from .syncAsset import sync_asset
 from .npoc import run_risk_cruising, run_sniffer
 from .autoTag import auto_tag
 from .githubSearch import github_search
+from .infoHunter import run_wih
+from .baseUpdateTask import BaseUpdateTask
+from .domainSiteUpdate import domain_site_update

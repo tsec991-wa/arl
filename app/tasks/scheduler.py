@@ -61,6 +61,7 @@ def wrap_domain_executors(base_domain=None, job_id=None, scope_id=None, options=
             'ssl_cert': False,
             'fofa_search': False,
             'dns_query_plugin': False,
+            'web_info_hunter': False,
             'scope_id': scope_id
         },
         'celery_id': celery_id
@@ -112,7 +113,12 @@ class DomainExecutor(DomainTask):
 
         self.set_domain_info_list()
 
-        #仅仅对新增域名保留
+        # 返回发现的新域名，在后续进行同步到资产组
+        ret_new_domain_set = set()
+        for domain_info in self.domain_info_list:
+            ret_new_domain_set.add(domain_info.domain)
+
+        # 仅仅对新增域名保留
         self.start_ip_fetch()
         self.start_site_fetch()
 
@@ -126,10 +132,6 @@ class DomainExecutor(DomainTask):
 
         self.update_task_field("status", TaskStatus.DONE)
         self.update_task_field("end_time", utils.curr_date())
-
-        ret_new_domain_set = set()
-        for domain_info in self.domain_info_list:
-            ret_new_domain_set.add(domain_info.domain)
 
         return ret_new_domain_set
 
@@ -227,6 +229,7 @@ class IPExecutor(IPTask):
                 "file_leak": False,
                 "site_spider": False,
                 "ssl_cert": False,
+                'web_info_hunter': False,
                 'scope_id': self.scope_id
             },
             'celery_id': celery_id

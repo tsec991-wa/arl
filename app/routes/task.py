@@ -37,8 +37,8 @@ base_search_task_fields = {
     'options.dns_query_plugin': fields.Boolean(description="是否开启域名插件查询"),
     'options.skip_scan_cdn_ip': fields.Boolean(description="是否跳过CDN IP端口扫描"),
     'options.nuclei_scan': fields.Boolean(description="是否开启nuclei 扫描"),
-    'options.findvhost': fields.Boolean(description="是否开启Host碰撞检测")
-
+    'options.findvhost': fields.Boolean(description="是否开启Host碰撞检测"),
+    'options.web_info_hunter': fields.Boolean(description="是否开启 webInfoHunter"),
 }
 
 base_search_task_fields.update(base_query_fields)
@@ -46,13 +46,13 @@ base_search_task_fields.update(base_query_fields)
 search_task_fields = ns.model('SearchTask', base_search_task_fields)
 
 add_task_fields = ns.model('AddTask', {
-    'name': fields.String(required=True, description="任务名"),
-    'target': fields.String(required=True, description="目标"),
-    "domain_brute": fields.Boolean(),
-    'domain_brute_type': fields.String(),
-    "port_scan_type": fields.String(description="端口扫描类型"),
-    "port_scan": fields.Boolean(),
-    "service_detection": fields.Boolean(),
+    'name': fields.String(required=True, example="task name", description="任务名"),
+    'target': fields.String(required=True, example="www.freebuf.com", description="目标"),
+    "domain_brute": fields.Boolean(example=True),
+    'domain_brute_type': fields.String(example="test"),
+    "port_scan_type": fields.String(example="test", description="端口扫描类型"),
+    "port_scan": fields.Boolean(example=True),
+    "service_detection": fields.Boolean(example=False),
     "service_brute": fields.Boolean(example=False),
     "os_detection": fields.Boolean(example=False),
     "site_identify": fields.Boolean(example=False),
@@ -61,14 +61,13 @@ add_task_fields = ns.model('AddTask', {
     "search_engines": fields.Boolean(example=False),
     "site_spider": fields.Boolean(example=False),
     "arl_search": fields.Boolean(example=False),
-    "alt_dns": fields.Boolean(),
-    "github_search_domain": fields.Boolean(),
-    "ssl_cert": fields.Boolean(),
-    "fetch_api_path": fields.Boolean(),
+    "alt_dns": fields.Boolean(example=False),
+    "ssl_cert": fields.Boolean(example=False),
     "dns_query_plugin": fields.Boolean(example=False, default=False),
-    "skip_scan_cdn_ip": fields.Boolean(),
+    "skip_scan_cdn_ip": fields.Boolean(example=False, default=False),
     "nuclei_scan": fields.Boolean(description="nuclei 扫描", example=False, default=False),
-    "findvhost": fields.Boolean()
+    "findvhost": fields.Boolean(example=False, default=False),
+    "web_info_hunter": fields.Boolean(example=False, default=False, description="WEB JS 中的信息收集"),
 })
 
 
@@ -208,7 +207,9 @@ class DeleteTask(ARLResource):
 
         for task_id in task_id_list:
             utils.conn_db('task').delete_many({'_id': ObjectId(task_id)})
-            table_list = ["cert", "domain", "fileleak", "ip", "service", "site", "url", "vuln", "cip"]
+            table_list = ["cert", "domain", "fileleak","ip", "service",
+                          "site", "url", "vuln", "cip", "npoc_service", "wih", "nuclei_result", "stat_finger"]
+
             if del_task_data_flag:
                 for name in table_list:
                     utils.conn_db(name).delete_many({'task_id': task_id})

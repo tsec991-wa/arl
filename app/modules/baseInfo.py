@@ -11,10 +11,9 @@ class BaseInfo:
     def dump_json(self, flag = True):
         item = self._dump_json()
         if flag:
-            return  json.dumps(item)
+            return json.dumps(item)
         else:
             return item
-
 
     def _dump_json(self):
         raise NotImplementedError()

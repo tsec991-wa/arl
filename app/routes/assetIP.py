@@ -60,6 +60,38 @@ class ARLAssetIPExport(ARLResource):
         return response
 
 
+@ns.route('/export_ip/')
+class ARLIPExportIp(ARLResource):
+    parser = get_arl_parser(base_search_fields, location='args')
+
+    @auth
+    @ns.expect(parser)
+    def get(self):
+        """
+        从 资产分组 IP 中导出 IP
+        """
+        args = self.parser.parse_args()
+        response = self.send_export_file_attr(args=args, collection="asset_ip", field="ip")
+
+        return response
+
+
+@ns.route('/export_domain/')
+class ARLIPExportIp(ARLResource):
+    parser = get_arl_parser(base_search_fields, location='args')
+
+    @auth
+    @ns.expect(parser)
+    def get(self):
+        """
+        从 资产分组 IP 中导出 域名
+        """
+        args = self.parser.parse_args()
+        response = self.send_export_file_attr(args=args, collection="asset_ip", field="domain")
+
+        return response
+
+
 delete_ip_fields = ns.model('deleteAssetIP',  {
     '_id': fields.List(fields.String(required=True, description="数据_id"))
 })
