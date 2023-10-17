@@ -24,7 +24,8 @@ class ProbeHTTP(BaseThread):
         return _targets
 
     def work(self, target):
-        conn = utils.http_req(target, 'head', timeout=(3, 2))
+        conn = utils.http_req(target, 'get', timeout=(3, 2), stream=True)
+        conn.close()
 
         if conn.status_code in [502, 504, 501, 422, 410]:
             logger.debug(f"{target} 状态码为 {conn.status_code} 跳过")

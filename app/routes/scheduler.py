@@ -6,7 +6,7 @@ from . import base_query_fields, ARLResource, get_arl_parser
 from app import scheduler as app_scheduler, utils
 from app.modules import SchedulerStatus, AssetScopeType, TaskTag
 from app.helpers import get_options_by_policy_id
-from app.helpers.scheduler import have_same_site_update_monitor
+from app.helpers.scheduler import have_same_site_update_monitor, have_same_wih_update_monitor
 
 ns = Namespace('scheduler', description="资产监控任务信息")
 
@@ -42,7 +42,7 @@ class ARLScheduler(ARLResource):
         return data
 
 
-add_scheduler_fields = ns.model('addScheduler',  {
+add_scheduler_fields = ns.model('addScheduler', {
     "scope_id": fields.String(required=True, description="添加资产范围"),
     "domain": fields.String(required=True, description="域名"),  # 多个域名可以用,隔开
     "interval": fields.Integer(description="间隔，单位是秒"),  # 单位是S
@@ -67,7 +67,7 @@ class AddARLScheduler(ARLResource):
         name = args.pop("name")
         policy_id = args.pop("policy_id", "")
 
-        if interval < 3600*6:
+        if interval < 3600 * 6:
             return utils.build_ret(ErrorMsg.IntervalLessThan3600, {"interval": interval})
 
         monitor_domain = utils.arl.get_monitor_domain_by_id(scope_id)
@@ -92,7 +92,7 @@ class AddARLScheduler(ARLResource):
             curr_domain = x.strip()
             if curr_domain not in scope_data["scope_array"]:
                 return utils.build_ret(ErrorMsg.DomainNotFoundViaScope,
-                                        {"domain": curr_domain, "scope_id": scope_id})
+                                       {"domain": curr_domain, "scope_id": scope_id})
 
             if curr_domain in monitor_domain:
                 return utils.build_ret(ErrorMsg.DomainViaJob,
@@ -126,7 +126,7 @@ class AddARLScheduler(ARLResource):
         return utils.build_ret(ErrorMsg.Success, ret_data)
 
 
-delete_scheduler_fields = ns.model('deleteScheduler',  {
+delete_scheduler_fields = ns.model('deleteScheduler', {
     "job_id": fields.List(fields.String(description="监控任务ID列表"))
 })
 
@@ -156,7 +156,7 @@ class DeleteARLScheduler(ARLResource):
         return utils.build_ret(ErrorMsg.Success, ret_data)
 
 
-recover_scheduler_fields = ns.model('recoverScheduler',  {
+recover_scheduler_fields = ns.model('recoverScheduler', {
     "job_id": fields.String(required=True, description="监控任务ID")
 })
 
@@ -187,7 +187,7 @@ class RecoverARLScheduler(ARLResource):
         return utils.build_ret(ErrorMsg.Success, {"job_id": job_id})
 
 
-batch_recover_scheduler_fields = ns.model('batchRecoverScheduler',  {
+batch_recover_scheduler_fields = ns.model('batchRecoverScheduler', {
     "job_id": fields.List(fields.String(required=True, description="监控任务ID列表"))
 })
 
@@ -217,7 +217,7 @@ class BatchRecoverARLScheduler(ARLResource):
         return utils.build_ret(ErrorMsg.Success, {"job_id": job_id_list})
 
 
-stop_scheduler_fields = ns.model('stopScheduler',  {
+stop_scheduler_fields = ns.model('stopScheduler', {
     "job_id": fields.String(required=True, description="监控任务ID")
 })
 
@@ -248,7 +248,7 @@ class StopARLScheduler(ARLResource):
         return utils.build_ret(ErrorMsg.Success, {"job_id": job_id})
 
 
-batch_stop_scheduler_fields = ns.model('batchStopScheduler',  {
+batch_stop_scheduler_fields = ns.model('batchStopScheduler', {
     "job_id": fields.List(fields.String(required=True, description="监控任务ID列表"))
 })
 
@@ -278,9 +278,9 @@ class BatchStopARLScheduler(ARLResource):
         return utils.build_ret(ErrorMsg.Success, {"job_id": job_id_list})
 
 
-add_scheduler_site_fields = ns.model('addSchedulerSite',  {
+add_scheduler_site_fields = ns.model('addSchedulerSite', {
     "scope_id": fields.String(required=True, description="资产范围 id"),
-    "interval": fields.Integer(description="间隔，单位是秒"),  # 单位是S
+    "interval": fields.Integer(description="间隔，单位是秒", example=3600 * 23),  # 单位是S
     "name": fields.String(description="监控任务名称"),  # 名称为空即自动生成
 })
 
@@ -299,7 +299,7 @@ class AddSiteScheduler(ARLResource):
         interval = args.pop("interval")
         name = args.pop("name")
 
-        if interval < 3600*6:
+        if interval < 3600 * 6:
             return utils.build_ret(ErrorMsg.IntervalLessThan3600, {"interval": interval})
 
         scope_data = utils.arl.scope_data_by_id(scope_id)
@@ -317,5 +317,48 @@ class AddSiteScheduler(ARLResource):
         _id = app_scheduler.add_asset_site_monitor_job(scope_id=scope_id,
                                                        name=name,
                                                        interval=interval)
+
+        return utils.build_ret(ErrorMsg.Success, {"schedule_id": _id})
+
+
+add_scheduler_wih_fields = ns.model('addSchedulerWih', {
+    "scope_id": fields.String(required=True, description="资产范围 id"),
+    "interval": fields.Integer(description="间隔，单位是秒", example=3600 * 23),  # 单位是S
+    "name": fields.String(description="监控任务名称", example=""),  # 名称为空即自动生成
+})
+
+
+@ns.route('/add/wih_monitor/')
+class AddWihScheduler(ARLResource):
+
+    @auth
+    @ns.expect(add_scheduler_wih_fields)
+    def post(self):
+        """
+        添加WIH更新监控周期任务
+        """
+        args = self.parse_args(add_scheduler_wih_fields)
+        scope_id = args.pop("scope_id")
+        interval = args.pop("interval")
+        name = args.pop("name")
+
+        if interval < 3600 * 6:
+            return utils.build_ret(ErrorMsg.IntervalLessThan3600, {"interval": interval})
+
+        scope_data = utils.arl.scope_data_by_id(scope_id)
+
+        if not scope_data:
+            return utils.build_ret(ErrorMsg.NotFoundScopeID, {"scope_id": scope_id})
+
+        if have_same_wih_update_monitor(scope_id=scope_id):
+            return utils.build_ret(ErrorMsg.DomainSiteViaJob, {"scope_id": scope_id,
+                                                               "scope_name": scope_data['name']})
+
+        if not name:
+            name = "WIH 监控-{}".format(scope_data["name"])
+
+        _id = app_scheduler.add_asset_wih_monitor_job(scope_id=scope_id,
+                                                      name=name,
+                                                      interval=interval)
 
         return utils.build_ret(ErrorMsg.Success, {"schedule_id": _id})

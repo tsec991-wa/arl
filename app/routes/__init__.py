@@ -1,6 +1,5 @@
 import re
-from flask_restx import Resource, Api, reqparse, fields
-from app import modules
+from flask_restx import Resource, reqparse, fields
 from bson.objectid import ObjectId
 from datetime import datetime
 from urllib.parse import quote
@@ -8,6 +7,7 @@ from flask import make_response
 import time
 
 from app.utils import conn_db as conn
+
 base_query_fields = {
     'page': fields.Integer(description="当前页数", example=1),
     'size': fields.Integer(description="页面大小", example=10),
@@ -69,6 +69,20 @@ class ARLResource(Resource):
                 })
                 query_args[real_key] = raw_value
 
+            elif key.endswith("__neq"):
+                real_key = key.split('__neq')[0]
+                raw_value = {
+                    "$ne": args[key]
+                }
+                query_args[real_key] = raw_value
+
+            elif key.endswith("__not"):
+                real_key = key.split('__not')[0]
+                raw_value = {
+                    "$not": re.compile(re.escape(args[key]))
+                }
+                query_args[real_key] = raw_value
+
             elif isinstance(args[key], str):
                 if key in EQUAL_FIELDS:
                     query_args[key] = args[key]
@@ -79,7 +93,6 @@ class ARLResource(Resource):
                     }
             else:
                 query_args[key] = args[key]
-
 
         return query_args
 
@@ -97,14 +110,14 @@ class ARLResource(Resource):
 
         return items
 
-    def build_data(self, args= None , collection = None):
+    def build_data(self, args=None, collection=None):
 
         default_field = self.get_default_field(args)
         page = default_field.get("page", 1)
         size = default_field.get("size", 10)
         orderby_list = default_field.get('order', [("_id", -1)])
         query = self.build_db_query(args)
-        result = conn(collection).find(query).sort(orderby_list).skip(size*(page-1)).limit(size)
+        result = conn(collection).find(query).sort(orderby_list).skip(size * (page - 1)).limit(size)
         count = conn(collection).count(query)
         items = self.build_return_items(result)
 
@@ -112,6 +125,12 @@ class ARLResource(Resource):
         for key in query:
             if key in special_keys:
                 query[key] = str(query[key])
+
+            raw_value = query[key]
+            if isinstance(raw_value, dict):
+                if "$not" in raw_value:
+                    if isinstance(raw_value["$not"], type(re.compile(""))):
+                        raw_value["$not"] = raw_value["$not"].pattern
 
         data = {
             "page": page,
@@ -126,6 +145,7 @@ class ARLResource(Resource):
     '''
     取默认字段的值，并且删除
     '''
+
     def get_default_field(self, args):
         default_field_map = {
             "page": 1,
@@ -170,7 +190,10 @@ class ARLResource(Resource):
             "asset_site": "site",
             "asset_domain": "domain",
             "asset_ip": "ip",
-            "url": "url"
+            "asset_wih": "content",
+            "url": "url",
+            "cip": "cidr_ip",
+            "wih": "content",
         }
         data = self.build_data(args=args, collection=_type)["items"]
         items_set = set()
@@ -186,7 +209,21 @@ class ARLResource(Resource):
 
         return self.send_file(items_set, _type)
 
-    def send_batch_export_file(self, task_id_list,  _type):
+    # 表示从 给定集合中 导出相应的字段来
+    def send_export_file_attr(self, args, collection, field):
+        data = self.build_data(args=args, collection=collection)["items"]
+        items_set = set()
+        for item in data:
+            if field in item:
+                value = item[field]
+                if isinstance(value, list):
+                    items_set |= set(value)
+                else:
+                    items_set.add(value)
+
+        return self.send_file(items_set, f"{collection}_{field}")
+
+    def send_batch_export_file(self, task_id_list, _type):
         _type_map_field_name = {
             "site": "site",
             "domain": "domain",
@@ -208,11 +245,12 @@ class ARLResource(Resource):
 
         return self.send_file(items_set, _type)
 
-    def send_scope_batch_export_file(self, scope_id_list,  _type):
+    def send_scope_batch_export_file(self, scope_id_list, _type):
         _type_map_field_name = {
             "asset_site": "site",
             "asset_domain": "domain",
-            "asset_ip": "ip"
+            "asset_ip": "ip",
+            "asset_wih": "content"
         }
 
         items_set = set()
@@ -275,3 +313,5 @@ from .github_monitor_result import ns as github_monitor_result_ns
 from .github_scheduler import ns as github_scheduler_ns
 from .task_schedule import ns as task_schedule_ns
 from .nuclei_result import ns as nuclei_result_ns
+from .wih import ns as wih_ns
+from .assetWih import ns as asset_wih_ns

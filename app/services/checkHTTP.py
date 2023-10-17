@@ -14,7 +14,9 @@ class CheckHTTP(BaseThread):
         self.checkout_map = {}
 
     def check(self, url):
-        conn = utils.http_req(url, method="head", timeout=self.timeout)
+        conn = utils.http_req(url, method="get", timeout=self.timeout, stream=True)
+        conn.close()
+
         if conn.status_code == 400:
             # 特殊情况排除
             etag = conn.headers.get("ETag")

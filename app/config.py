@@ -26,8 +26,11 @@ class Config(object):
 
     CDN_JSON_PATH = os.path.join(basedir, 'dicts/cdn_info.json')
 
+    # WebInfoHunter 规则文件
+    WIH_RULE_PATH = os.path.join(basedir, "dicts/wih_rules.yml")
+
     black_domain_path = os.path.join(basedir, 'dicts/blackdomain.txt')
-    black_heixie_path = os.path.join(basedir, 'dicts/blackhexie.txt')
+    black_hexie_path = os.path.join(basedir, 'dicts/blackhexie.txt')
     black_asset_site = os.path.join(basedir, 'dicts/black_asset_site.txt')
     altdns_dict_path = os.path.join(basedir, 'dicts/altdnsdict.txt')
 
@@ -58,10 +61,15 @@ class Config(object):
     FILE_LEAK_TOP_2k = os.path.join(basedir, 'dicts/file_top_2000.txt')
     FILE_LEAK_TOP_200 = os.path.join(basedir, 'dicts/file_top_200.txt')
 
-    DOMAIN_MAX_LEN = 16  # 不包括下发的目标域名长度，
+    DOMAIN_MAX_LEN = 25  # 不包括下发的目标域名长度，
 
     DINGDING_SECRET = ""
     DINGDING_ACCESS_TOKEN = ""
+
+    FEISHU_WEBHOOK = ""
+    FEISHU_SECRET = ""
+
+    WX_WORK_WEBHOOK = ""
 
     EMAIL_HOST = ""
     EMAIL_PORT = ""
@@ -202,6 +210,18 @@ try:
             Config.WEB_HOOK_URL = y["WEBHOOK"]["URL"]
         if y["WEBHOOK"].get("TOKEN"):
             Config.WEB_HOOK_TOKEN = y["WEBHOOK"]["TOKEN"]
+
+    # *** 飞书消息推送配置 ***
+    if y.get("FEISHU"):
+        if y["FEISHU"].get("WEBHOOK_URL"):
+            Config.FEISHU_WEBHOOK = y["FEISHU"]["WEBHOOK_URL"]
+        if y["FEISHU"].get("SECRET"):
+            Config.FEISHU_SECRET = y["FEISHU"]["SECRET"]
+
+    # *** 企业微信推送配置 ***
+    if y.get("WXWORK"):
+        if y["WXWORK"].get("WEBHOOK_URL"):
+            Config.WX_WORK_WEBHOOK = y["WXWORK"]["WEBHOOK_URL"]
 
 except Exception as e:
     print("Parse config.yaml error {}".format(e))

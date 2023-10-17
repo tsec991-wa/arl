@@ -4,19 +4,19 @@ import copy
 from urllib.parse import urlparse
 from collections import Counter
 from app import utils
-
-logger = utils.get_logger()
 from app.config import Config
 from app import services
 from app import modules
 from app.modules import ScanPortType, DomainDictType, CollectSource, TaskStatus
-from app.services import fetchCert, run_risk_cruising, run_sniffer
+from app.services import fetchCert, run_risk_cruising, run_sniffer, BaseUpdateTask
 from app.services.commonTask import CommonTask, WebSiteFetch, build_url_item
-from bson.objectid import ObjectId
 from app.helpers.domain import find_private_domain_by_task_id, find_public_ip_by_task_id
 from app.services.findVhost import find_vhost
 from app.services.dns_query import run_query_plugin
 from app.services.searchEngines import search_engines
+from app.services import domain_site_update
+
+logger = utils.get_logger()
 
 '''
 域名爆破
@@ -437,7 +437,7 @@ class DomainTask(CommonTask):
         self.task_id = task_id
         self.options = options
 
-        self.domain_info_list = []
+        self.domain_info_list = []  # 在 start_site_fetch 运行后会清空，用来释放内存
         self.ip_info_list = []
         self.ip_set = set()
         self.site_list = []
@@ -456,6 +456,8 @@ class DomainTask(CommonTask):
         self.npoc_service_target_set = set()
 
         self.web_site_fetch = None
+
+        self.wih_domain_set = set()  # 通过调用 WebInfoHunter 获取的域名集合
 
         scan_port_map = {
             "test": ScanPortType.TEST,
@@ -480,6 +482,8 @@ class DomainTask(CommonTask):
             scan_port_option["custom_host_timeout"] = self.options.get("host_timeout", 60 * 15)
 
         self.scan_port_option = scan_port_option
+
+        self.base_update_task = BaseUpdateTask(self.task_id)
 
     @property
     def domain_word_file(self) -> str:
@@ -678,17 +682,11 @@ class DomainTask(CommonTask):
 
         self.site_list.extend(sites)
 
-    def update_services(self, services, elapsed):
-        elapsed = "{:.2f}".format(elapsed)
-        self.update_task_field("status", services)
-        query = {"_id": ObjectId(self.task_id)}
-        update = {"$push": {"service": {"name": services, "elapsed": float(elapsed)}}}
-        utils.conn_db('task').update_one(query, update)
+    def update_services(self, service_name, elapsed):
+        self.base_update_task.update_services(service_name=service_name, elapsed=elapsed)
 
     def update_task_field(self, field=None, value=None):
-        query = {"_id": ObjectId(self.task_id)}
-        update = {"$set": {field: value}}
-        utils.conn_db('task').update_one(query, update)
+        self.base_update_task.update_task_field(field=field, value=value)
 
     def gen_ipv4_map(self):
         ipv4_map = {}
@@ -725,8 +723,8 @@ class DomainTask(CommonTask):
         self.service_info_list = []
         services_list = set()
         for _data in self.ip_info_list:
-            port_info_lsit = _data.port_info_list
-            for _info in port_info_lsit:
+            port_info_list = _data.port_info_list
+            for _info in port_info_list:
                 if _info.service_name:
                     if _info.service_name not in services_list:
                         _result = {}
@@ -891,8 +889,15 @@ class DomainTask(CommonTask):
         elapse = time.time() - t1
         self.update_services("find_site", elapse)
 
-        web_site_fetch = WebSiteFetch(task_id=self.task_id, sites=self.site_list, options=self.options)
+        # 对 domain_info_list 进行清空，回收内存
+        self.domain_info_list = []
+
+        web_site_fetch = WebSiteFetch(task_id=self.task_id,
+                                      sites=self.site_list, options=self.options,
+                                      scope_domain=[self.base_domain])
         web_site_fetch.run()
+
+        self.wih_domain_set = web_site_fetch.wih_domain_set
 
         self.web_site_fetch = web_site_fetch
 
@@ -1044,6 +1049,10 @@ class DomainTask(CommonTask):
                 item.update(page_map[url])
                 utils.conn_db('url').insert_one(item)
 
+    def start_wih_domain_update(self):
+        if self.wih_domain_set:
+            domain_site_update(self.task_id, list(self.wih_domain_set), "wih")
+
     def run(self):
         self.update_task_field("start_time", utils.curr_date())
 
@@ -1059,6 +1068,8 @@ class DomainTask(CommonTask):
         self.start_find_vhost()
 
         self.start_poc_run()
+
+        self.start_wih_domain_update()
 
         # 执行统计和同步操作
         self.common_run()

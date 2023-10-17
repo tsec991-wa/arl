@@ -21,7 +21,7 @@ def check_domain_black(domain):
             return True
 
     if blackhexie_list is None:
-        with open(Config.black_heixie_path) as f:
+        with open(Config.black_hexie_path) as f:
             blackhexie_list = f.readlines()
 
     try:

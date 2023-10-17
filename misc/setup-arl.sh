@@ -27,7 +27,8 @@ fi
 if [ ! -f /usr/local/bin/pip3.6 ]; then
   echo "install  pip3.6"
   python3.6 -m ensurepip --default-pip
-  pip3.6 install --upgrade pip
+  python3.6 -m pip install --upgrade pip
+  pip3.6 --version
 fi
 
 if ! command -v nmap &> /dev/null
@@ -39,10 +40,19 @@ fi
 
 if ! command -v nuclei &> /dev/null
 then
-  echo "install nuclei_2.9.4 ..."
-  wget https://github.com/projectdiscovery/nuclei/releases/download/v2.9.4/nuclei_2.9.4_linux_amd64.zip
-  unzip nuclei_2.9.4_linux_amd64.zip && mv nuclei /usr/bin/ && rm -f nuclei_2.9.4_linux_amd64.zip
-  nuclei
+  echo "install nuclei_2.9.15 ..."
+  wget https://github.com/projectdiscovery/nuclei/releases/download/v2.9.15/nuclei_2.9.15_linux_amd64.zip
+  unzip nuclei_2.9.15_linux_amd64.zip && mv nuclei /usr/bin/ && rm -f nuclei_2.9.15_linux_amd64.zip
+  nuclei -ut
+fi
+
+
+if ! command -v wih &> /dev/null
+then
+  echo "install wih ..."
+  ## 安装 WIH
+  wget https://github.com/1c3z/arl_files/raw/master/wih/wih_linux_amd64 -O /usr/bin/wih && chmod +x /usr/bin/wih
+  wih --version
 fi
 
 

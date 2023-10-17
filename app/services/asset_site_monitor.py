@@ -128,6 +128,8 @@ class AssetSiteMonitor(object):
             logger.info("not found change ok site, scope_id: {}".format(self.scope_id))
             return
 
+        logger.info("found scope site {}, scope_id: {}".format(len(sites), self.scope_id))
+
         site_info_list = fetch_site(sites)
 
         for site_info in site_info_list:
@@ -338,7 +340,6 @@ class Domain2SiteMonitor(object):
         if not sites:
             return []
 
-        # 设置超时，加快速度
         site_info_list = fetch_site(sites, concurrency=20, http_timeout=(5, 6))
 
         # 过滤 502, 504

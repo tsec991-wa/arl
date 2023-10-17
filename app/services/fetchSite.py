@@ -2,13 +2,14 @@ import time
 from pyquery import PyQuery as pq
 import binascii
 from urllib.parse import urljoin, urlparse
-from urllib3.util.url import get_host
+from urllib3.util.url import parse_url, get_host
 import mmh3
 from app import utils
 from .baseThread import BaseThread
+
 logger = utils.get_logger()
 from .autoTag import auto_tag
-from app.utils import http_req
+from app.utils import http_req, normal_url
 from app.utils.fingerprint import load_fingerprint, fetch_fingerprint
 
 
@@ -42,18 +43,21 @@ class FetchSite(BaseThread):
         if finger:
             item["finger"] = finger
 
-    def work(self, site):
+    def work(self, site, max_redirect=5):
+        if max_redirect <= 0:
+            return
+
         _, hostname, _ = get_host(site)
 
         conn = utils.http_req(site, timeout=self.http_timeout)
         item = {
-            "site": site,
+            "site": site[:200],
             "hostname": hostname,
             "ip": "",
             "title": utils.get_title(conn.content),
             "status": conn.status_code,
             "headers": utils.get_headers(conn),
-            "http_server":  conn.headers.get("Server", ""),
+            "http_server": conn.headers.get("Server", ""),
             "body_length": len(conn.content),
             "finger": [],
             "favicon": fetch_favicon(site)
@@ -69,19 +73,21 @@ class FetchSite(BaseThread):
         else:
             item["ip"] = hostname
 
-        self.site_info_list.append(item)
+        # 保存站点信息
+        if max_redirect == 5 or max_redirect == 1 \
+                or (conn.status_code != 301 and conn.status_code != 302):
+            self.site_info_list.append(item)
+
         if conn.status_code == 301 or conn.status_code == 302:
             url_302 = urljoin(site, conn.headers.get("Location", ""))
-            # 防御性编程
-            if len(url_302) > 100:
+            url_302 = normal_url(url_302)
+
+            # 防御性编程，防止url过长
+            if len(url_302) > 260:
                 return
 
-            if url_302 != site and url_302.startswith(site):
-                site_path = urlparse(site).path.strip("/")
-                url_302_path = urlparse(url_302).path.strip("/")
-                if len(site_path) > 5 and url_302_path.endswith(site_path):
-                    return
-                self.work(url_302)
+            if url_302 != site and same_netloc_and_scheme(url_302, site):
+                self.work(url_302, max_redirect=max_redirect - 1)
 
     def run(self):
         t1 = time.time()
@@ -94,6 +100,18 @@ class FetchSite(BaseThread):
         auto_tag(self.site_info_list)
 
         return self.site_info_list
+
+
+def same_netloc_and_scheme(u1, u2):
+    u1 = normal_url(u1)
+    u2 = normal_url(u2)
+    parsed1 = parse_url(u1)
+    parsed2 = parse_url(u2)
+
+    if parsed1.scheme == parsed2.scheme and parsed1.netloc == parsed2.netloc:
+        return True
+
+    return False
 
 
 def fetch_favicon(url):
@@ -182,4 +200,3 @@ class FetchFavicon(object):
 
         if icon_link_list:
             return urljoin(self.url, icon_link_list[0].attr('href'))
-

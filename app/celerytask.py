@@ -6,6 +6,7 @@ from celery import Celery, platforms
 from app import utils
 from app import tasks as wrap_tasks
 from app.modules import CeleryAction, TaskSyncStatus
+
 logger = utils.get_logger()
 
 celery = Celery('task', broker=Config.CELERY_BROKER_URL)
@@ -41,6 +42,7 @@ def run_task(options):
         CeleryAction.GITHUB_TASK_MONITOR: github_task_monitor,
         CeleryAction.ASSET_SITE_UPDATE: asset_site_update,
         CeleryAction.ADD_ASSET_SITE_TASK: asset_site_add_task,
+        CeleryAction.ASSET_WIH_UPDATE: asset_wih_update_task,
     }
     start_time = time.time()
     # 这里监控任务 task_id 和 target 是空的
@@ -79,6 +81,7 @@ def domain_exec(options):
 
 def domain_task_sync(options):
     """域名同步任务"""
+    from app.services.syncAsset import sync_asset
     scope_id = options.get("scope_id")
     task_id = options.get("task_id")
     query = {"_id": ObjectId(task_id)}
@@ -86,7 +89,7 @@ def domain_task_sync(options):
         update = {"$set": {"sync_status": TaskSyncStatus.RUNNING}}
         utils.conn_db('task').update_one(query, update)
 
-        wrap_tasks.sync_asset(task_id, scope_id, update_flag=False)
+        sync_asset(task_id, scope_id, update_flag=False)
 
         update = {"$set": {"sync_status": TaskSyncStatus.DEFAULT}}
         utils.conn_db('task').update_one(query, update)
@@ -162,6 +165,15 @@ def asset_site_update(options):
     scheduler_id = task_options["scheduler_id"]
     wrap_tasks.asset_site_update_task(task_id=task_id,
                                       scope_id=scope_id, scheduler_id=scheduler_id)
+
+
+def asset_wih_update_task(options):
+    task_id = options["task_id"]
+    task_options = options["options"]
+    scope_id = task_options["scope_id"]
+    scheduler_id = task_options["scheduler_id"]
+    wrap_tasks.asset_wih_update_task(task_id=task_id,
+                                     scope_id=scope_id, scheduler_id=scheduler_id)
 
 
 def asset_site_add_task(options):

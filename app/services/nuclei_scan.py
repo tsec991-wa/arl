@@ -67,22 +67,24 @@ class NucleiScan(object):
                 f.write(domain + "\n")
 
     def dump_result(self) -> list:
-        with open(self.nuclei_result_path, "r") as f:
-            lines = f.readlines()
-
         results = []
-        for line in lines:
-            data = json.loads(line)
-            item = {
-                "template_url": data.get("template-url", ""),
-                "template_id": data.get("template-id", ""),
-                "vuln_name": data.get("info", {}).get("name", ""),
-                "vuln_severity": data.get("info", {}).get("severity", ""),
-                "vuln_url": data.get("matched-at", ""),
-                "curl_command": data.get("curl-command", ""),
-                "target": data.get("host", "")
-            }
-            results.append(item)
+        with open(self.nuclei_result_path, "r") as f:
+            while True:
+                line = f.readline()
+                if not line:
+                    break
+
+                data = json.loads(line)
+                item = {
+                    "template_url": data.get("template-url", ""),
+                    "template_id": data.get("template-id", ""),
+                    "vuln_name": data.get("info", {}).get("name", ""),
+                    "vuln_severity": data.get("info", {}).get("severity", ""),
+                    "vuln_url": data.get("matched-at", ""),
+                    "curl_command": data.get("curl-command", ""),
+                    "target": data.get("host", "")
+                }
+                results.append(item)
 
         return results
 
