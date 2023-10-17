@@ -36,7 +36,7 @@ QUERY_PLUGIN:
     quake_token: ""
     max_size: 500
     enable: false
-  rapiddns: ""
+  rapiddns:
     enable: true
   securitytrails: # 网站 https://securitytrails.com/
     api_key: ""
