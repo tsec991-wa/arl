@@ -22,6 +22,7 @@ class Query(DNSQueryBase):
         # 文档 https://quake.360.net/quake/#/help?id=5e77423bcb9954d2f8a01656&title=%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E
         json_data = {
             "query": "domain:\"{}\"".format(target),
+            "include": ["service.http.host"],
             "start": 0,
             "size": self.max_size,
             "latest": True
