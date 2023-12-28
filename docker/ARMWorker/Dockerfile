@@ -66,7 +66,7 @@ ARG NUCLEI_VERSION=3.1.3
 
 # 安装nuclei
 RUN wget "https://github.com/projectdiscovery/nuclei/releases/download/v${NUCLEI_VERSION}/nuclei_${NUCLEI_VERSION}_linux_arm64.zip" \
-    && unzip "nuclei_${NUCLEI_VERSION}_linux_arm64.zip" \
+    && unzip "nuclei_${NUCLEI_VERSION}_linux_arm64.zip" nuclei \
     && mv nuclei /usr/bin/ \
     && rm -f "nuclei_${NUCLEI_VERSION}_linux_arm64.zip"
 
