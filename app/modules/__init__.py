@@ -406,7 +406,12 @@ error_map = {
     "AddAssetSiteNotSupportIP": {
         "message": "不支持对IP资产组添加站点",
         "code": 1608,
+    },
+    "RuleAlreadyExists": {
+        "message": "规则已存在",
+        "code": 1609,
     }
+
 }
 
 
@@ -469,4 +474,5 @@ class ErrorMsg:
     TaskScheduleNotFound = error_map["TaskScheduleNotFound"]
     DomainSiteViaJob = error_map["DomainSiteViaJob"]
     AddAssetSiteNotSupportIP = error_map["AddAssetSiteNotSupportIP"]
+    RuleAlreadyExists = error_map["RuleAlreadyExists"]
 

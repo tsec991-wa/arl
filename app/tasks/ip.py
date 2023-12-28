@@ -58,13 +58,7 @@ class IPTask(CommonTask):
 
     def async_ip_info(self):
         """
-        用来同步发现的 ip 中的信息，仅仅在监控阶段使用
-        """
-        raise NotImplementedError()
-
-    def async_site_info(self, site_info_list):
-        """
-        用来同步发现的 site 中的信息，仅仅在监控阶段使用
+        用来同步发现的 ip 中的信息（包括新添加端口），仅仅在IP 任务 监控阶段使用
         """
         raise NotImplementedError()
 
@@ -271,10 +265,6 @@ class IPTask(CommonTask):
                                       options=self.options)
         web_site_fetch.run()
 
-        # 监控任务同步站点信息
-        if self.task_tag == 'monitor':
-            self.async_site_info(web_site_fetch.site_info_list)
-
         """服务识别（python）实现"""
         if self.options.get("npoc_service_detection"):
             base_update.update_task_field("status", "npoc_service_detection")
@@ -299,8 +289,14 @@ class IPTask(CommonTask):
             elapse = time.time() - t1
             base_update.update_services("weak_brute", elapse)
 
+        # 加上统计信息
         self.insert_finger_stat()
+        self.insert_cip_stat()
         self.insert_task_stat()
+
+        # 如果有关联的资产分组就进行同步，同步这块有点乱
+        if self.task_tag == "task":
+            self.sync_asset()
 
         base_update.update_task_field("status", TaskStatus.DONE)
         base_update.update_task_field("end_time", utils.curr_date())

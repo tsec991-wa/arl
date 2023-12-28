@@ -23,3 +23,13 @@ def find_public_ip_by_task_id(task_id):
     }
     items = utils.conn_db('ip').distinct("ip", query)
     return list(items)
+
+
+def find_domain_by_task_id(task_id):
+    query = {
+        "task_id": task_id
+    }
+    items = utils.conn_db('domain').distinct("domain", query)
+    return list(items)
+
+

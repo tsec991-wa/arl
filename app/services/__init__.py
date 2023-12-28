@@ -21,3 +21,6 @@ from .githubSearch import github_search
 from .infoHunter import run_wih
 from .baseUpdateTask import BaseUpdateTask
 from .domainSiteUpdate import domain_site_update
+from .fingerprint_cache import finger_db_cache, finger_db_identify, have_human_rule_from_db
+from .fingerprint import FingerPrint
+from .expr import evaluate_expression, check_expression, check_expression_with_error

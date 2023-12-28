@@ -1,7 +1,7 @@
 from app.services.dns_query import DNSQueryBase
-from app import utils
+from app.utils import get_fld
 from app.services.fofaClient import fofa_query
-import re
+
 
 class Query(DNSQueryBase):
     def __init__(self):
@@ -9,8 +9,21 @@ class Query(DNSQueryBase):
         self.source_name = "fofa"
 
     def sub_domains(self, target):
-        # 这里换成host 用domain 二级域名查不来数据。
-        query = "host~=\".+\\.{}\"".format(re.escape(target))
+        query = 'domain="{}"'.format(target)
+
+        domain = get_fld(target)
+
+        # Target 是非法域名
+        if not domain:
+            self.logger.warning("Invalid domain: {}".format(target))
+            return []
+
+        # 表示是子域名，需要用host 和 domain 一起查询
+        if domain != target:
+            query = 'host="{}" && domain="{}"'.format(target, domain)
+
+        self.logger.debug("target:{}, fofa query: {}".format(target, query))
+
         data = fofa_query(query, 9999)
         results = []
         if isinstance(data, dict):

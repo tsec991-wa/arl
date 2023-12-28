@@ -201,6 +201,14 @@ def exit_gracefully(signum, frame):
     parent.kill()
 
 
+def truncate_string(s):
+    if len(s) > 30:
+        truncated_string = s[:30]
+        return truncated_string + "..."
+    else:
+        return s
+
+
 from .user import user_login, user_login_header, auth, user_logout, change_pass
 from .push import message_push
 from .fingerprint import parse_human_rule, transform_rule_map

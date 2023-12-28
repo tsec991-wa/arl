@@ -28,6 +28,11 @@ class FetchSite(BaseThread):
                                    title=item["title"], favicon_hash=favicon_hash,
                                    finger_list=self.fingerprint_list)
 
+        result_db = finger_identify(content=content, header=item["headers"],
+                                    title=item["title"], favicon_hash=str(favicon_hash))
+
+        result = set(result + result_db)
+
         finger = []
         for name in result:
             finger_item = {
@@ -102,6 +107,24 @@ class FetchSite(BaseThread):
         return self.site_info_list
 
 
+def finger_identify(content: bytes, header: str, title: str, favicon_hash: str):
+    from app.services import finger_db_identify
+
+    try:
+        content = content.decode("utf-8")
+    except UnicodeDecodeError:
+        content = content.decode("gbk", "ignore")
+
+    variables = {
+        "body": content,
+        "header": header,
+        "title": title,
+        "icon_hash": favicon_hash
+    }
+
+    return finger_db_identify(variables)
+
+
 def same_netloc_and_scheme(u1, u2):
     u1 = normal_url(u1)
     u2 = normal_url(u2)
@@ -120,6 +143,10 @@ def fetch_favicon(url):
 
 
 def fetch_site(sites, concurrency=15, http_timeout=None):
+    # 更新数据库缓存
+    from app.services import finger_db_cache
+    finger_db_cache.update_cache()
+
     f = FetchSite(sites, concurrency=concurrency, http_timeout=http_timeout)
     return f.run()
 

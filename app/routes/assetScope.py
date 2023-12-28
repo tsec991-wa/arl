@@ -156,7 +156,7 @@ class DeleteARLAssetScope(ARLResource):
             if not self.get_scope_data(scope_id):
                 return utils.build_ret(ErrorMsg.NotFoundScopeID, {"scope_id": scope_id})
 
-        table_list = ["asset_domain", "asset_site", "asset_ip", "scheduler"]
+        table_list = ["asset_domain", "asset_site", "asset_ip", "scheduler", "asset_wih"]
 
         for scope_id in scope_id_list:
             utils.conn_db(self._table).delete_many({'_id': ObjectId(scope_id)})

@@ -1,5 +1,6 @@
 import sys
 import os
+import threading
 from . import conn_db
 from app.config import Config
 
@@ -23,13 +24,13 @@ def create_index():
         "fileleak": "task_id",
         "ip": "task_id",
         "npoc_service": "task_id",
-        "site": ["task_id","status", "title", "hostname", "site", "http_server"],
+        "site": ["task_id", "status", "title", "hostname", "site", "http_server"],
         "service": "task_id",
         "url": "task_id",
         "vuln": "task_id",
         "asset_ip": "scope_id",
         "asset_site": "scope_id",
-        "asset_domain": ["scope_id","domain"],
+        "asset_domain": ["scope_id", "domain"],
         "github_result": "github_task_id",
         "github_monitor_result": "github_scheduler_id",
         "wih": ["task_id", "record_type", "fnv_hash"],
@@ -58,13 +59,18 @@ def arl_update():
     open(update_lock, 'a').close()
 
 
+# 创建锁，防止多线程同时更新
+lock = threading.Lock()
+
+
 def npoc_info_update():
     from app.services.npoc import NPoC
-    if conn_db('poc').count() > 0:
-        return
+    with lock:
+        if conn_db('poc').count_documents({}) > 0:
+            return
 
-    n = NPoC()
-    n.sync_to_db()
+        n = NPoC()
+        n.sync_to_db()
 
 
 # 判断是否是-m flask routes 模式运行

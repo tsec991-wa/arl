@@ -103,20 +103,28 @@ def gen_cip_map(task_id=None):
 
     results = list(conn_db('ip').find(query, {"ip": 1, "domain": 1}))
     cip_map = dict()
+
+    have_domain_flag = True
+
     for result in results:
         if result.get("domain") is None:
-            continue
+            have_domain_flag = False
 
         cip = result["ip"] + "/24"
         cip = IP(cip, make_net=True).strNormal(1)
         count_map = cip_map.get(cip)
         if count_map is None:
+            domain_set = set()
+            if have_domain_flag:
+                domain_set = set(result["domain"])
             cip_map[cip] = {
-                "domain_set": set(result["domain"]),
+                "domain_set": domain_set,
                 "ip_set": {result["ip"]}
             }
         else:
-            count_map["domain_set"] |= set(result["domain"])
+            if have_domain_flag:
+                count_map["domain_set"] |= set(result["domain"])
+
             count_map["ip_set"] |= {result["ip"]}
 
     return cip_map

@@ -1,6 +1,7 @@
 import json
 import time
-import werkzeug
+import yaml
+from werkzeug.datastructures import FileStorage
 from urllib.parse import quote
 from flask import make_response
 from flask_restx import Resource, Api, reqparse, fields, Namespace
@@ -8,6 +9,8 @@ from bson import ObjectId
 from app.utils import get_logger, auth, parse_human_rule, transform_rule_map
 from app import utils
 from app.modules import ErrorMsg
+from app.services import check_expression_with_error, have_human_rule_from_db
+from app.services import check_expression
 from . import base_query_fields, ARLResource, get_arl_parser
 
 ns = Namespace('fingerprint', description="指纹信息")
@@ -55,14 +58,16 @@ class ARLFingerprint(ARLResource):
         human_rule = args.pop('human_rule')
         name = args.pop('name')
 
-        rule_map = parse_human_rule(human_rule)
-        if rule_map is None:
-            return utils.build_ret(ErrorMsg.RuleInvalid, {"rule": human_rule})
+        if have_human_rule_from_db(human_rule):
+            return utils.build_ret(ErrorMsg.RuleAlreadyExists, {"rule": human_rule})
+
+        flag, err = check_expression_with_error(human_rule)
+        if not flag:
+            return utils.build_ret(ErrorMsg.RuleInvalid, {"error": str(err)})
 
         data = {
             "name": name,
-            "rule": rule_map,
-            "human_rule": transform_rule_map(rule_map),
+            "human_rule": human_rule,
             "update_date": utils.curr_date_obj()
         }
 
@@ -109,13 +114,13 @@ class ExportARLFinger(ARLResource):
         results = list(utils.conn_db('fingerprint').find())
         for result in results:
             item = dict()
-            item["rule"] = result["rule"]
             item["name"] = result["name"]
+            item["rule"] = result["human_rule"]
             items.append(item)
 
-        data = json.dumps(items, indent=4, ensure_ascii=False)
+        data = yaml.dump(items, default_flow_style=False, sort_keys=False, allow_unicode=True)
         response = make_response(data)
-        filename = "fingerprint_{}_{}.json".format(len(items), int(time.time()))
+        filename = "fingerprint_{}_{}.yml".format(len(items), int(time.time()))
         response.headers['Content-Type'] = 'application/octet-stream'
         response.headers["Access-Control-Expose-Headers"] = "Content-Disposition"
         response.headers["Content-Disposition"] = "attachment; filename={}".format(quote(filename))
@@ -125,7 +130,7 @@ class ExportARLFinger(ARLResource):
 
 file_upload = reqparse.RequestParser()
 file_upload.add_argument('file',
-                         type=werkzeug.datastructures.FileStorage,
+                         type=FileStorage,
                          location='files',
                          required=True,
                          help='JSON file')
@@ -143,7 +148,7 @@ class UploadARLFinger(ARLResource):
         args = file_upload.parse_args()
         file_data = args['file'].read()
         try:
-            obj = json.loads(file_data)
+            obj = yaml.load(file_data)
             if not isinstance(obj, list):
                 return utils.build_ret(ErrorMsg.Error, {'msg': "not list obj"})
 
@@ -152,9 +157,11 @@ class UploadARLFinger(ARLResource):
             repeat_cnt = 0
 
             for rule in obj:
-                human_rule = transform_rule_map(rule['rule'])
+                human_rule = rule["rule"]
                 rule_name = rule['name']
-                if not human_rule:
+
+                rule_flag = check_expression(human_rule)
+                if not rule_flag:
                     error_cnt += 1
                     continue
 
@@ -163,14 +170,8 @@ class UploadARLFinger(ARLResource):
                     repeat_cnt += 1
                     continue
 
-                rule_map = parse_human_rule(human_rule)
-                if rule_map is None:
-                    error_cnt += 1
-                    continue
-
                 data = {
                     "name": rule_name,
-                    "rule": rule_map,
                     "human_rule": human_rule,
                     "update_date": utils.curr_date_obj()
                 }

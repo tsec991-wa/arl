@@ -11,8 +11,11 @@
 .docker/config.json
 .dockercfg
 .DS_Store
+.editorconfig
 .env
 .env.example
+.eslintignore
+.eslintrc.js
 .esmtprc
 .ftpconfig
 .git
@@ -24,6 +27,7 @@
 .github
 .gitignore
 .gitlab-ci.yml
+.gitmodules
 .history
 .htaccess
 .htaccess.bak
@@ -41,6 +45,8 @@
 .netrc
 .npmrc
 .pgpass
+.prettierignore
+.prettierrc.js
 .rediscli_history
 .remote-sync.json
 .s3cfg
@@ -273,6 +279,8 @@ archaius
 archery
 aspxspy.aspx
 assets
+assets.tar.gz
+assets.zip
 auth/login
 auth/login/sentry/
 auth/register
@@ -284,6 +292,7 @@ axis2/
 axis2/axis2-admin/login
 axis2/services
 b.php
+babel.config.js
 back.tar.bz2
 backup
 backup.7z
@@ -313,6 +322,7 @@ bshservlet
 bshservlet-wbsh
 bug
 bugfree
+build-stats.json
 build.gradle
 build.sh
 build.tar.gz
@@ -344,6 +354,8 @@ cm.php
 code.tar.gz
 codeception.yml
 codegen.json
+commitlint.config.js
+common.ts
 Common.yml
 common.yml
 common/m_intl_common_header/gulpfile.js
@@ -408,6 +420,7 @@ CONTRIBUTING.txt
 Controls
 Controls/Ueditor/
 core
+coverage
 cpanel
 credentials
 credentials.xml
@@ -497,6 +510,7 @@ dev
 dev.html
 dev/applications
 dev/services
+DEVELOP_GUIDE.md
 dfshealth.html
 dist
 dist.rar
@@ -520,6 +534,7 @@ druid/login.html
 druid/sql.json
 druid/websession.json
 dubbo
+dump.rdb
 dump.sql
 dump.sql.gz
 dwr
@@ -583,6 +598,7 @@ git
 gitee
 gitlab
 gitlab/
+globals.d.ts
 goroutine
 grafana/
 graph
@@ -628,6 +644,7 @@ index.rar
 index.tar.bz2
 index.tar.gz
 index.tgz
+index.ts
 index.zip
 init
 init.bat
@@ -759,6 +776,7 @@ nacos/
 nagios
 nginx.conf
 nginx_status
+node_modules
 nohup.out
 nomad
 npm-debug.log
@@ -822,6 +840,7 @@ pma/index.php
 pms
 pods
 pom.xml
+postcss.config.js
 pp-site-association
 pprof
 preview.html
@@ -873,6 +892,9 @@ resources/Gruntfile.js
 resources/js/ueditor/
 rest/swagger.json
 robomongo.json
+ROOT.tar.gz
+ROOT.war
+ROOT.zip
 routes
 rs-status
 rsync.sh
@@ -892,6 +914,8 @@ s/README.md
 sales.log
 salesforce.js
 scheduledtasks
+script.tar.gz
+script.zip
 Search-Replace-DB-master/
 Search-Replace-DB/
 secret
@@ -983,6 +1007,7 @@ status2
 stencilset.json
 storage/logs/laravel.log
 storm
+storybook-dist
 struts.xml
 swagger
 swagger-resources
@@ -1015,6 +1040,9 @@ temp.zip
 temp/
 templates
 test
+test-report.xml
+test-results
+test-results.json
 test.7z
 test.asp
 test.aspx
@@ -1067,6 +1095,8 @@ Trace.axd
 trace.axd
 tracing
 troller
+tsconfig.build.json
+tsconfig.json
 turbine.stream
 tz.php
 uc_server.tar.gz
@@ -1140,6 +1170,7 @@ ventrilo_srv.ini
 version
 version/
 vision/index.jsp
+vitest.config.ts
 vpn/index.html
 vulnspy.php
 wdcp
@@ -1156,6 +1187,7 @@ web.config
 web.gz
 web.properties
 web.rar
+web.tar
 web.tar.bz2
 web.tar.gz
 web.tgz

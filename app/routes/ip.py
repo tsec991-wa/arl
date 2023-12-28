@@ -21,7 +21,8 @@ base_search_fields = {
     "ip_type": fields.String(description="IP类型，公网(PUBLIC)和内网(PRIVATE)"),
     "cdn_name": fields.String(description="CDN 厂商名称"),
     "geo_asn.number": fields.Integer(description="AS number"),
-    "geo_asn.organization": fields.String(description="AS organization")
+    "geo_asn.organization": fields.String(description="AS organization"),
+    "geo_city.region_name": fields.String(description="GEO region_name")
 }
 
 base_search_fields.update(base_query_fields)

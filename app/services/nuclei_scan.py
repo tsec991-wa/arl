@@ -103,7 +103,7 @@ class NucleiScan(object):
                    ]
 
         logger.info(" ".join(command))
-        utils.exec_system(command, timeout=12*60*60)
+        utils.exec_system(command, timeout=96*60*60)
 
     def run(self):
         if not self.check_have_nuclei():
