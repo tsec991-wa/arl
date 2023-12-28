@@ -5,7 +5,7 @@ from .domain import DomainTask
 from .ip import IPTask
 from app import utils
 from app.modules import TaskStatus, CollectSource, SchedulerStatus
-from app.services import sync_asset, build_domain_info
+from app.services import sync_asset, build_domain_info, sync_asset
 import time
 from app.scheduler import update_job_run
 from app.services import webhook
@@ -303,37 +303,20 @@ class IPExecutor(IPTask):
         self.ip_info_list = new_ip_info_list
         logger.info("found new ip_info {}".format(len(self.ip_info_list)))
 
-    def async_site_info(self, site_info_list):
-        """
-        用来同步发现的 site 中的信息，仅仅在监控阶段使用
-        """
-        new_site_info_list = []
-        for site_info in site_info_list:
-            curr_date_obj = utils.curr_date_obj()
-            query = {"site":site_info["site"], "scope_id": self.scope_id}
-            data = utils.conn_db('asset_site').find_one(query)
-            if data:
-                continue
+    # 同步SITE 和 web_info_hunter 信息
+    def sync_asset_site_wih(self):
+        have_data = False
+        query = {"task_id": self.task_id}
 
-            new_site_info_list.append(site_info)
-            site_info["save_date"] = curr_date_obj
-            site_info["update_date"] = curr_date_obj
-            site_info["scope_id"] = self.scope_id
-            utils.conn_db('asset_site').insert_one(site_info)
+        if utils.conn_db('site').count_documents(query) or utils.conn_db('wih').count_documents(query):
+            have_data = True
 
-        new_asset_map = {
-            "site": new_site_info_list[:10],
-            "ip": self.ip_info_list[:10],
-            "task_name": self.task_name
-        }
-        new_asset_counter = {
-            "site": len(new_site_info_list),
-            "ip": len(self.ip_info_list)
-        }
+        # 有数据才同步
+        if not have_data:
+            return
 
-        if len(self.ip_info_list) > 0:
-            utils.message_push(asset_map=new_asset_map, asset_counter=new_asset_counter)
-            webhook.ip_asset_web_hook(task_id=self.task_id, scope_id=self.scope_id)
+        sync_asset(self.task_id, self.scope_id, update_flag=False, category=["site", "wih"],
+                   push_flag=True, task_name=self.task_name)
 
 
 def ip_executor(target, scope_id, task_name, job_id, options):
@@ -357,6 +340,8 @@ def ip_executor(target, scope_id, task_name, job_id, options):
     try:
         executor.insert_task_data()
         executor.run()
+        executor.sync_asset_site_wih()
+
     except Exception as e:
         logger.warning("error on ip_executor {}".format(executor.ip_target))
         logger.exception(e)

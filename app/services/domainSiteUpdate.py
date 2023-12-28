@@ -2,6 +2,8 @@ import time
 from app.services import build_domain_info,\
     probe_http, fetch_site, BaseUpdateTask
 
+from app.helpers.domain import find_domain_by_task_id
+
 from app import utils
 
 
@@ -50,8 +52,15 @@ class DomainSiteUpdate(object):
         if site_info_list:
             utils.conn_db('site').insert_many(site_info_list)
 
+    # 对域名进行检查，如果域名不在任务范围内，就不进行更新
+    def set_and_check_domains(self):
+        task_domains = find_domain_by_task_id(self.task_id)
+        self.domains = list(set(self.domains) - set(task_domains))
+
     def run(self):
         status_name = f"{self.source}_domain_update"
+
+        self.set_and_check_domains()
 
         logger.info("start domain site update task_id: {}, len:{}, source: {}".format(self.task_id,
                                                                                       len(self.domains), self.source))
@@ -70,6 +79,6 @@ class DomainSiteUpdate(object):
 
 # 将域名直接加到任务数据中，只加到域名和站点表中，
 # 没有检验添加的域名是否在任务范围中
-# 也没有检验域名是否已经存在过
+# 会检验域名是否已经存在任务中
 def domain_site_update(task_id: str, domains: list, source: str):
     DomainSiteUpdate(task_id, domains, source).run()

@@ -34,6 +34,9 @@ def get_ip_domain_list(target):
             raise Exception("{} 包含在禁止域名内".format(item))
 
         elif utils.is_valid_domain(item):
+            if utils.check_domain_black(item):
+                raise Exception("{} 包含在系统黑名单中".format(item))
+
             domain_list.add(item)
 
         elif utils.is_valid_fuzz_domain(item):

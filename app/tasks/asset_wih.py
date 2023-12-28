@@ -81,7 +81,7 @@ class AssetWihUpdateTask(CommonTask):
 
         if domains:
             domain_site_update(self.task_id, domains, "wih")
-            # 对域名进行同步
+
             sync_asset(task_id=self.task_id, scope_id=self.scope_id)
 
 

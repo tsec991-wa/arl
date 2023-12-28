@@ -12,6 +12,8 @@ headers
 favicon_hash
 '''
 
+# 这个函数已经不用了
+
 
 def parse_human_rule(rule):
     rule_map = {
@@ -87,8 +89,9 @@ def transform_rule_map(rule):
 web_app_rules = json.loads("\n".join(load_file(Config.web_app_rule)))
 
 
+# 这里只是加载本地指纹规则
 def load_fingerprint():
-    items = list(conn_db('fingerprint').find())
+    items = []
     for rule in web_app_rules:
         new_rule = dict()
         new_rule["name"] = rule

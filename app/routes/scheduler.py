@@ -1,6 +1,6 @@
 from bson import ObjectId
 from flask_restx import Resource, Api, reqparse, fields, Namespace
-from app.utils import get_logger, auth
+from app.utils import get_logger, auth, truncate_string
 from app.modules import ErrorMsg
 from . import base_query_fields, ARLResource, get_arl_parser
 from app import scheduler as app_scheduler, utils
@@ -106,6 +106,8 @@ class AddARLScheduler(ARLResource):
                 if not name:
                     curr_name = "监控-{}-{}".format(scope_data["name"], x)
 
+                curr_name = truncate_string(curr_name)
+
                 job_id = app_scheduler.add_job(domain=x, scope_id=scope_id,
                                                options=task_options, interval=interval,
                                                name=curr_name, scope_type=scope_type)
@@ -117,6 +119,8 @@ class AddARLScheduler(ARLResource):
             ip_target = " ".join(domains)
             if not name:
                 curr_name = "监控-{}-{}".format(scope_data["name"], ip_target)
+
+            curr_name = truncate_string(curr_name)
 
             job_id = app_scheduler.add_job(domain=ip_target, scope_id=scope_id,
                                            options=task_options, interval=interval,
