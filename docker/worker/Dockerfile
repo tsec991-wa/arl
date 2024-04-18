@@ -76,7 +76,6 @@ RUN wih --version
 WORKDIR /code
 
 ## 自测一下
-RUN nginx -t
 RUN cp app/config.yaml.example app/config.yaml
 RUN env FLASK_APP=app.main:arl_app python3.6 -m flask routes
 RUN python3 -m app.celerytask
