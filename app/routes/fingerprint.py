@@ -148,7 +148,7 @@ class UploadARLFinger(ARLResource):
         args = file_upload.parse_args()
         file_data = args['file'].read()
         try:
-            obj = yaml.load(file_data)
+            obj = yaml.safe_load(file_data)
             if not isinstance(obj, list):
                 return utils.build_ret(ErrorMsg.Error, {'msg': "not list obj"})
 
