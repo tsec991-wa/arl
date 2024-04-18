@@ -1,7 +1,7 @@
 import logging
 import sys
 import unittest
-from app.services.dns_query import run_query_plugin
+from app.services import run_query_plugin
 from app import utils
 
 

@@ -62,7 +62,7 @@ WORKDIR /opt/ARL-NPoC/
 RUN pip3 install -r requirements.txt
 
 # 定义nuclei版本
-ARG NUCLEI_VERSION=3.1.3
+ARG NUCLEI_VERSION=3.2.4
 
 # 安装nuclei
 RUN wget "https://github.com/projectdiscovery/nuclei/releases/download/v${NUCLEI_VERSION}/nuclei_${NUCLEI_VERSION}_linux_arm64.zip" \

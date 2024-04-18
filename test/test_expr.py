@@ -7,7 +7,6 @@ class TestExpression(TestCase):
     def test_valid_expressions(self):
         test_cases = [
             ('ab = "abc"', False),
-            ('status_code == "200"', True),
             ('!(body == "jeecms" && body == "http://wwwjeecms.com") && body != "powered by"', True),
             ('(title == "jeecms" && body="http://wwwjeecms.com") || header = "powered by jeecms"', True),
             ('(title=="jeecms"&&body="http://wwwjeecms.com")||header="powered by jeecms"', True),
@@ -32,10 +31,16 @@ class TestExpression(TestCase):
             ('icon_hash != "11111111"', True),
             ('body != "test" && icon_hash != "116323821"', False),
             ('body="test"&&icon_hash=="116323821"', True),
+            ('body="test"&&body!="<"', False),
+            ('body=="body test1<"', True),
+            ('body="body test1<"', True),
+            ('body="test"&&body="<"', True),
+            ('!(body="test")', False),
+            ('!body="test"', False),
         ]
 
         variables = {
-            'body': "body test1",
+            'body': "body test1<",
             'header': "header test2",
             'title': "title \" test3",
             'icon_hash': "116323821"

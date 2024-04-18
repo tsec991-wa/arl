@@ -1,35 +1,45 @@
 import unittest
-from app.services.fofaClient import fofa_query_result, fofa_query, FofaClient
+from app.services.fofaClient import fofa_query, FofaClient
 from app.config import Config
+from itertools import chain
+from app import utils
 
 
 class TestFofa(unittest.TestCase):
-    def test_vip_level(self):
-        if not Config.FOFA_KEY or not Config.FOFA_KEY:
-            self.fail("please set fofa key in config-docker.yaml")
+    def test_search(self):
+        self.assertTrue(Config.FOFA_KEY != "")
+        client = FofaClient(Config.FOFA_KEY,
+                            page_size=10, max_page=3)
 
-        client = FofaClient(Config.FOFA_EMAIL, Config.FOFA_KEY, page_size=300)
-        info = client.info_my()
+        results = list(chain.from_iterable(client.search('body = "test"')))
+        self.assertTrue(len(results) == 30)
 
-        vip_level_map = {
-            "0": "注册用户",
-            "1": "普通会员",
-            "2": "高级会员",
-            "3": "企业会员"
-        }
-        vip_level = str(info["vip_level"])
+    def test_search_all(self):
+        self.assertTrue(Config.FOFA_KEY != "")
+        client = FofaClient(Config.FOFA_KEY,
+                            page_size=10, max_page=3)
 
-        print("当前用户: {}, 帐号类型:{} ".format(Config.FOFA_EMAIL, vip_level_map[vip_level]))
+        query = 'domain = "baidu.com" && port = 80'
 
-    def test_query(self):
-        data = fofa_query('test', page_size=1)
-        print(data)
-        self.assertTrue(data["size"] >= 1)
+        data = client.fofa_search_all(query)
 
-    def test_query_result(self):
-        results = fofa_query_result('ip="8.8.8.8" && port="53"', page_size=100)
+        print(f"Query: {data['query']}, Size: {data['size']}, Results: {len(data['results'])}")
 
-        self.assertTrue(len(results) == 1)
+        self.assertTrue(data["size"] > 30)
+        self.assertTrue(len(data["results"]) == 10)
+
+    def test_fofa_query(self):
+        results = fofa_query('body = "test"',  page_size=10, max_page=3)
+        self.assertTrue(len(results) == 30)
+
+    def test_fofa_query_fields(self):
+        results = fofa_query('body = "test"', fields="ip", page_size=10, max_page=3)
+        for result in results:
+            if not utils.is_vaild_ip_target(result):
+                print(result, "is not a valid ip")
+                self.assertTrue(False)
+
+        self.assertTrue(len(results) == 30)
 
 
 if __name__ == '__main__':

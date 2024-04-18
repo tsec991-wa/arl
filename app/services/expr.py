@@ -44,7 +44,7 @@ bool_expr = infixNotation(
 # 定义操作符
 operators = {
     '==': lambda x, y: x == y,
-    '!=': lambda x, y: x != y,
+    '!=': lambda x, y: x not in y,
     '=': lambda x, y: x in y,
     '!': lambda x: not x,
     '&&': lambda x, y: x and y,

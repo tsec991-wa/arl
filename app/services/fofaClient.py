@@ -2,107 +2,96 @@
 import base64
 from app.config import Config
 from app import utils
-from celery.utils.log import get_task_logger
-logger = get_task_logger(__name__)
+import time
+logger = utils.get_logger()
 
 
 class FofaClient:
-    def __init__(self, email, key, page_size=9999):
-        self.email = email
+    def __init__(self, key, page_size=2000, max_page=5, fields="host,ip,port"):
         self.key = key
-        self.base_url = Config.FOFA_URL
-        self.search_api_url = "/api/v1/search/all"
-        self.info_my_api_url = "/api/v1/info/my"
         self.page_size = page_size
-        self.param = {}
-
-    def info_my(self):
-        param = {
-            "email": self.email,
+        self.max_page = max_page
+        self.base_url = Config.FOFA_URL.rstrip("/")
+        self.search_all_path = "/api/v1/search/all"
+        self.base_params = {
             "key": self.key,
         }
-        self.param = param
-        data = self._api(self.base_url + self.info_my_api_url)
-        return data
+        self.fields = fields
 
-    def fofa_search_all(self, query):
-        qbase64 = base64.b64encode(query.encode())
-        param = {
-            "email": self.email,
-            "key": self.key,
-            "qbase64": qbase64.decode('utf-8'),
-            "size": self.page_size
+    def search(self, query):
+        page = 1
+        while True:
+            if page > self.max_page:
+                break
+            if page > 1:
+                time.sleep(0.2)
+
+            data = self.fofa_search_all(query, page)
+            logger.debug(f"Page:{page} Page Size: {self.page_size} Query: " + data["query"])
+
+            results = data["results"]
+
+            logger.debug(f"Current results size: {len(results)} All Size: " + str(data["size"]))
+
+            if results:
+                yield results
+
+            if len(results) < self.page_size:
+                break
+
+            page += 1
+
+    def fofa_search_all(self, query, page=1):
+        q_base64 = base64.b64encode(query.encode())
+        params = {
+            "qbase64": q_base64.decode('utf-8'),
+            "page": page,
+            "size": self.page_size,
+            "fields": self.fields
         }
-
-        self.param = param
-        data = self._api(self.base_url + self.search_api_url)
+        data = self._api(self.search_all_path, params)
         return data
 
-    def _api(self, url):
-        data = utils.http_req(url, 'get', params=self.param).json()
+    def _api(self, path, params=None):
+        if params is None:
+            params = self.base_params
+        else:
+            params.update(self.base_params)
+
+        url = self.base_url + path
+        conn = utils.http_req(url, 'get', params=params)
+        if conn.status_code != 200:
+            raise Exception("{} http status code: {}".format(url, conn.status_code))
+
+        data = conn.json()
         if data.get("error") and data["errmsg"]:
             raise Exception(data["errmsg"])
 
         return data
 
-    def search_cert(self, cert):
-        query = 'cert="{}"'.format(cert)
-        data = self.fofa_search_all(query)
-        results = data["results"]
-        return results
 
-
-def fetch_ip_bycert(cert, size=9999):
-    ip_set = set()
-    logger.info("fetch_ip_bycert {}".format(cert))
+def fofa_query(query, fields="host,ip,port",
+               page_size=Config.FOFA_PAGE_SIZE,
+               max_page=Config.FOFA_MAX_PAGE):
+    ret = []
     try:
-        client = FofaClient(Config.FOFA_EMAIL, Config.FOFA_KEY, page_size=size)
-        items = client.search_cert(cert)
-        for item in items:
-            ip_set.add(item[1])
-    except Exception as e:
-        logger.warn("{} error: {}".format(cert, e))
-
-    return list(ip_set)
-
-
-def fofa_query(query, page_size=9999):
-    try:
-        if not Config.FOFA_KEY or not Config.FOFA_KEY:
+        if not Config.FOFA_KEY:
             return "please set fofa key in config-docker.yaml"
 
-        client = FofaClient(Config.FOFA_EMAIL, Config.FOFA_KEY, page_size=page_size)
-        info = client.info_my()
-        if info.get("vip_level") == 0:
-            return "不支持注册用户"
+        client = FofaClient(Config.FOFA_KEY,
+                            page_size=page_size, max_page=max_page,
+                            fields=fields)
+        for results in client.search(query):
+            ret.extend(results)
 
-        # 普通会员，最多只查100条
-        if info.get("vip_level") == 1:
-            client.page_size = min(page_size, 100)
-
-        data = client.fofa_search_all(query)
-        return data
+        logger.info(f"fofa query: {query} result size: {len(ret)}")
+        return ret
 
     except Exception as e:
         error_msg = str(e)
         error_msg = error_msg.replace(Config.FOFA_KEY[10:], "***")
+        if ret:
+            logger.warning(f"fofa query error: {error_msg}")
+            return ret
         return error_msg
 
-
-def fofa_query_result(query, page_size=9999):
-    try:
-        ip_set = set()
-        data = fofa_query(query, page_size)
-
-        if isinstance(data, dict):
-            if data['error']:
-                return data['errmsg']
-
-            for item in data["results"]:
-                ip_set.add(item[1])
-            return list(ip_set)
-
-        raise Exception(data)
-    except Exception as e:
-        error_msg = str(e)
-        return error_msg

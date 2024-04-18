@@ -18,11 +18,11 @@ class TestCDNName(unittest.TestCase):
         self.assertTrue(len(domain_info) == 2)
 
         ip_info_list = scan_port(domain_info, scan_port_option)
-        print(ip_info_list)
+        print(ip_info_list[0])
         for info in ip_info_list:
             self.assertTrue(info.cdn_name)
 
-    def test_scan_port_skip(self):
+    def test_scan_port_skip_cdn(self):
         scan_port_option = {
             "ports": ScanPortType.TEST,
             "service_detect": False,
@@ -36,6 +36,22 @@ class TestCDNName(unittest.TestCase):
         for info in ip_info_list:
             self.assertTrue(info.cdn_name)
             self.assertTrue(len(info.port_info_list) == 2)
+
+    def test_scan_exclude_ports_80(self):
+        scan_port_option = {
+            "ports": ScanPortType.TEST,
+            "service_detect": False,
+            "os_detect": False,
+            "exclude_ports": "80",
+        }
+
+        domain_info = services.build_domain_info(['www.baidu.com'], concurrency=10)
+        self.assertTrue(len(domain_info) == 1)
+
+        ip_info_list = scan_port(domain_info, scan_port_option)
+        for info in ip_info_list:
+            self.assertTrue(len(info.port_info_list) == 1)
+            self.assertTrue(info.port_info_list[0].port_id == 443)
 
 
 if __name__ == '__main__':

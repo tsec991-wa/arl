@@ -1,7 +1,9 @@
 from flask_restx import fields, Namespace
 from app.utils import get_logger, auth
 from . import base_query_fields, ARLResource, get_arl_parser
-
+from bson import ObjectId
+from app.modules import ErrorMsg
+from app import utils
 
 ns = Namespace('wih', description="WEB Info Hunter 信息")
 
@@ -51,3 +53,25 @@ class ARLWihExport(ARLResource):
         response = self.send_export_file(args=args, _type="wih")
 
         return response
+
+
+delete_wih_fields = ns.model('deleteWih',  {
+    '_id': fields.List(fields.String(required=True, description="数据_id"))
+})
+
+
+@ns.route('/delete/')
+class DeleteARLWIH(ARLResource):
+    @auth
+    @ns.expect(delete_wih_fields)
+    def post(self):
+        """
+        删除任务中的 wih 数据
+        """
+        args = self.parse_args(delete_wih_fields)
+        id_list = args.pop('_id', "")
+        for _id in id_list:
+            query = {'_id': ObjectId(_id)}
+            utils.conn_db('wih').delete_one(query)
+
+        return utils.build_ret(ErrorMsg.Success, {'_id': id_list})

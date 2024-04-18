@@ -2,7 +2,6 @@ import bson
 import re
 from app import utils
 from app.modules import TaskStatus, TaskTag, TaskType, CeleryAction
-from app import celerytask
 
 logger = utils.get_logger()
 
@@ -106,6 +105,8 @@ def build_task_data(task_name, task_target, task_type, task_tag, options):
 
 
 def submit_task(task_data):
+    from app import celerytask
+
     target = task_data["target"]
     utils.conn_db('task').insert_one(task_data)
     task_id = str(task_data.pop("_id"))

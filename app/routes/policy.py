@@ -56,7 +56,8 @@ ip_config_fields = ns.model('ipConfig', {
     "host_timeout_type": fields.String(description="主机超时时间类别（default|custom）", default="default"),
     "host_timeout": fields.Integer(description="主机超时时间(s)", default=900),
     "port_parallelism": fields.Integer(description="探测报文并行度", default=32),
-    "port_min_rate": fields.Integer(description="最少发包速率", default=60)
+    "port_min_rate": fields.Integer(description="最少发包速率", default=60),
+    "exclude_ports": fields.String(description="排除扫描端口", default=""),
 })
 
 '''站点相关配置选项'''
@@ -123,6 +124,11 @@ class AddARLPolicy(ARLResource):
                 return utils.build_ret(ErrorMsg.PortCustomInvalid, {"port_custom": port_list})
 
             ip_config["port_custom"] = ",".join(port_list)
+
+        exclude_ports = ip_config.get("exclude_ports", "")
+        if exclude_ports:
+            if not utils.is_valid_exclude_ports(exclude_ports):
+                return utils.build_ret(ErrorMsg.ExcludePortsInvalid, {"exclude_ports": exclude_ports})
 
         ip_config = self._update_arg(ip_config, ip_config_fields)
 

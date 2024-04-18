@@ -2,10 +2,10 @@ import signal
 import time
 from bson import ObjectId
 from app.config import Config
-from celery import Celery, platforms
+from celery import Celery, platforms, current_task
 from app import utils
 from app import tasks as wrap_tasks
-from app.modules import CeleryAction, TaskSyncStatus
+from app.modules import CeleryAction, TaskSyncStatus, TaskStatus, CeleryRoutingKey
 
 logger = utils.get_logger()
 
@@ -19,15 +19,36 @@ celery.conf.update(
 platforms.C_FORCE_ROOT = True
 
 
-@celery.task(queue='arltask')
+@celery.task(queue=CeleryRoutingKey.ASSET_TASK)
 def arl_task(options):
     # 这里不检验 celery_action， 调用的时候区分
     run_task(options)
 
 
-def run_task(options):
-    signal.signal(signal.SIGTERM, utils.exit_gracefully)
+def sigterm_handler(signum, frame):
+    if not current_task:
+        return
+    celery_id = current_task.request.id
+    routing_key = current_task.request.delivery_info['routing_key']
+    logger.info(f"Caught signal {signum}, celery_id:{celery_id} terminating {routing_key}...")
 
+    logger.info(f"{current_task.request}")
+
+    try:
+        query = {'celery_id': celery_id}
+        update_data = {"$set": {"status": TaskStatus.STOP, "end_time": utils.curr_date()}}
+        if routing_key == CeleryRoutingKey.ASSET_TASK:
+            utils.conn_db('task').update_one(query, update_data)
+        elif routing_key == CeleryRoutingKey.GITHUB_TASK:
+            utils.conn_db('github_task').update_one(query, update_data)
+    except Exception as e:
+        logger.error(f"update celery_id:{celery_id} status error: {e}")
+
+    utils.exit_gracefully(signum, frame)
+
+
+def run_task(options):
+    signal.signal(signal.SIGTERM, sigterm_handler)
     action = options.get("celery_action")
     data = options.get("data")
     action_map = {
@@ -62,7 +83,7 @@ def run_task(options):
     logger.info("end {} elapsed: {}".format(action, elapsed))
 
 
-@celery.task(queue='arlgithub')
+@celery.task(queue=CeleryRoutingKey.GITHUB_TASK)
 def arl_github(options):
     # 这里不检验 celery_action， 调用的时候区分
     run_task(options)

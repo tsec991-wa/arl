@@ -24,21 +24,17 @@ class Query(DNSQueryBase):
 
         self.logger.debug("target:{}, fofa query: {}".format(target, query))
 
-        data = fofa_query(query, 9999)
+        fofa_results = fofa_query(query)
+        if isinstance(fofa_results, str):
+            raise Exception(fofa_results)
+
         results = []
-        if isinstance(data, dict):
-            if data['error']:
-                raise Exception(data['error'])
+        for item in fofa_results:
+            domain_data = item[0]
+            if "://" in domain_data:
+                domain_data = domain_data.split(":")[1].strip("/")
 
-            for item in data["results"]:
-                domain_data = item[0]
-                if "://" in domain_data:
-                    domain_data = domain_data.split(":")[1].strip("/")
-
-                results.append(domain_data.split(":")[0])
-
-        else:
-            raise Exception(data)
+            results.append(domain_data.split(":")[0])
 
         return list(set(results))
 

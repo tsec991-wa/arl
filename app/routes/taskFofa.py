@@ -1,8 +1,10 @@
 from flask_restx import Namespace, fields
 from app.utils import get_logger, auth, build_ret, conn_db
 from app.modules import ErrorMsg, CeleryAction
-from app.services.fofaClient import fofa_query, fofa_query_result
+from app.services.fofaClient import FofaClient
+from app.services import fofa_query
 from app import celerytask
+from app.config import Config
 from bson import ObjectId
 from . import ARLResource
 
@@ -28,19 +30,22 @@ class TaskFofaTest(ARLResource):
         """
         args = self.parse_args(test_fofa_fields)
         query = args.pop('query')
-        data = fofa_query(query, page_size=1)
-        if isinstance(data, str):
-            return build_ret(ErrorMsg.FofaConnectError, {'error': data})
 
-        if data.get("error"):
-            return build_ret(ErrorMsg.FofaKeyError, {'error': data.get("errmsg")})
+        if Config.FOFA_KEY == "":
+            return build_ret(ErrorMsg.FofaKeyError, {'error': "Fofa key is not set"})
 
-        item = {
-            "size": data["size"],
-            "query": data["query"]
-        }
-
-        return build_ret(ErrorMsg.Success, item)
+        try:
+            client = FofaClient(Config.FOFA_KEY, page_size=1, max_page=1)
+            data = client.fofa_search_all(query)
+            item = {
+                "size": data["size"],
+                "query": data["query"]
+            }
+            return build_ret(ErrorMsg.Success, item)
+        except Exception as e:
+            error_msg = str(e)
+            error_msg = error_msg.replace(Config.FOFA_KEY[10:], "***")
+            return build_ret(ErrorMsg.FofaConnectError, {'error':error_msg})
 
 
 add_fofa_fields = ns.model('addTaskFofa', {
@@ -75,26 +80,16 @@ class AddFofaTask(ARLResource):
             "ssl_cert": False
         }
 
-        data = fofa_query(query, page_size=1)
-        if isinstance(data, str):
-            return build_ret(ErrorMsg.FofaConnectError, {'error': data})
-
-        if data.get("error"):
-            return build_ret(ErrorMsg.FofaKeyError, {'error': data.get("errmsg")})
-
-        if data["size"] <= 0:
-            return build_ret(ErrorMsg.FofaResultEmpty, {})
-
-        fofa_ip_list = fofa_query_result(query)
-        if isinstance(fofa_ip_list, str):
-            return build_ret(ErrorMsg.FofaConnectError, {'error': data})
+        ip_results = fofa_query(query, fields="ip")
+        if isinstance(ip_results, str):
+            return build_ret(ErrorMsg.FofaConnectError, {'error': ip_results})
 
         if policy_id and len(policy_id) == 24:
             task_options.update(policy_2_task_options(policy_id))
 
         task_data = {
             "name": name,
-            "target": "Fofa ip {}".format(len(fofa_ip_list)),
+            "target": "Fofa ip {}".format(len(ip_results)),
             "start_time": "-",
             "end_time": "-",
             "task_tag": "task",
@@ -102,7 +97,7 @@ class AddFofaTask(ARLResource):
             "status": "waiting",
             "options": task_options,
             "type": "fofa",
-            "fofa_ip": fofa_ip_list
+            "fofa_ip": ip_results
         }
         task_data = submit_fofa_task(task_data)
 

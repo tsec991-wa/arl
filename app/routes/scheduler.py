@@ -5,8 +5,11 @@ from app.modules import ErrorMsg
 from . import base_query_fields, ARLResource, get_arl_parser
 from app import scheduler as app_scheduler, utils
 from app.modules import SchedulerStatus, AssetScopeType, TaskTag
-from app.helpers import get_options_by_policy_id
-from app.helpers.scheduler import have_same_site_update_monitor, have_same_wih_update_monitor
+from app.helpers import (
+    get_options_by_policy_id,
+    have_same_site_update_monitor,
+    have_same_wih_update_monitor
+)
 
 ns = Namespace('scheduler', description="资产监控任务信息")
 

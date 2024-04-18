@@ -83,6 +83,18 @@ class ARLResource(Resource):
                 }
                 query_args[real_key] = raw_value
 
+            elif key.endswith("__gt") and isinstance(args[key], int):
+                real_key = key.split('__gt')[0]
+                raw_value = {
+                    "$gt": args[key]
+                }
+                query_args[real_key] = raw_value
+            elif key.endswith("__lt") and isinstance(args[key], int):
+                real_key = key.split('__lt')[0]
+                raw_value = {
+                    "$lt": args[key]
+                }
+                query_args[real_key] = raw_value
             elif isinstance(args[key], str):
                 if key in EQUAL_FIELDS:
                     query_args[key] = args[key]
@@ -229,7 +241,8 @@ class ARLResource(Resource):
             "domain": "domain",
             "ip": "ip",
             "url": "url",
-            "cip": "cidr_ip"
+            "cip": "cidr_ip",
+            "wih": "content",
         }
         items_set = set()
         filed_name = _type_map_field_name.get(_type, "")

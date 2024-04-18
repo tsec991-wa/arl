@@ -139,13 +139,13 @@ class ScanPort(object):
                 "os_detect": False,
                 "port_parallelism": 32,
                 "port_min_rate": 64,
-                "custom_host_timeout": None
+                "custom_host_timeout": None,
+                "exclude_ports": None
             }
 
         if 'skip_scan_cdn_ip' in option:
             self.skip_scan_cdn_ip = option["skip_scan_cdn_ip"]
-
-        del option["skip_scan_cdn_ip"]
+            del option["skip_scan_cdn_ip"]
 
         self.option = option
 
@@ -474,7 +474,8 @@ class DomainTask(CommonTask):
             "skip_scan_cdn_ip": self.options.get("skip_scan_cdn_ip", False),  # 跳过扫描CDN IP
             "port_parallelism": self.options.get("port_parallelism", 32),  # 探测报文并行度
             "port_min_rate": self.options.get("port_min_rate", 64),  # 最少发包速率
-            "custom_host_timeout": None  # 主机超时时间(s)
+            "custom_host_timeout": None,  # 主机超时时间(s)
+            "exclude_ports": self.options.get("exclude_ports", None)  # 排除的端口
         }
 
         # 只有当设置为自定义时才会去设置超时时间

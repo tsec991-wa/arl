@@ -45,9 +45,10 @@ class Config(object):
     # 常见16个WEB端口
     TOP_10 = "80,443,8443,8080,8081,8888,8089,5000,5001,8085,800,81,9000,88,8001,8090"
 
-    FOFA_EMAIL = ""
     FOFA_KEY = ""
     FOFA_URL = "https://fofa.info"
+    FOFA_MAX_PAGE = 5      # 最大查询页数
+    FOFA_PAGE_SIZE = 2000  # 每页2000条
 
     AUTH = False
     API_KEY = ""
@@ -106,10 +107,15 @@ try:
     Config.CELERY_BROKER_URL = y["CELERY"]["BROKER_URL"]
 
     # *** Fofa 配置 ***
-    Config.FOFA_EMAIL = y["FOFA"]["EMAIL"]
     Config.FOFA_KEY = y["FOFA"]["KEY"]
     if y["FOFA"].get("URL"):
         Config.FOFA_URL = y["FOFA"]["URL"]
+
+    if y["FOFA"].get("MAX_PAGE"):
+        Config.FOFA_MAX_PAGE = y["FOFA"]["MAX_PAGE"]
+
+    if y["FOFA"].get("PAGE_SIZE"):
+        Config.FOFA_PAGE_SIZE = y["FOFA"]["PAGE_SIZE"]
 
     # *** GEOIP 配置 ***
     Config.GEOIP_CITY = y["GEOIP"]["CITY"]
