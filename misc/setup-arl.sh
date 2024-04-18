@@ -33,16 +33,16 @@ fi
 
 if ! command -v nmap &> /dev/null
 then
-    echo "install nmap-7.91-1 ..."
-    rpm -vhU https://nmap.org/dist/nmap-7.91-1.x86_64.rpm
+    echo "install nmap-7.93-1 ..."
+    rpm -vhU https://nmap.org/dist/nmap-7.93-1.x86_64.rpm
 fi
 
 
 if ! command -v nuclei &> /dev/null
 then
-  echo "install nuclei_2.9.15 ..."
-  wget https://github.com/projectdiscovery/nuclei/releases/download/v2.9.15/nuclei_2.9.15_linux_amd64.zip
-  unzip nuclei_2.9.15_linux_amd64.zip && mv nuclei /usr/bin/ && rm -f nuclei_2.9.15_linux_amd64.zip
+  echo "install nuclei_3.2.4 ..."
+  wget https://github.com/projectdiscovery/nuclei/releases/download/v3.2.4/nuclei_3.2.4_linux_amd64.zip
+  unzip nuclei_3.2.4_linux_amd64.zip && mv nuclei /usr/bin/ && rm -f nuclei_3.2.4_linux_amd64.zip
   nuclei -ut
 fi
 
