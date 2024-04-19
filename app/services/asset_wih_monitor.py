@@ -1,5 +1,4 @@
-from app.helpers import asset_site, asset_wih
-from app.helpers.scope import get_scope_by_scope_id
+from app.helpers import asset_site, asset_wih, get_scope_by_scope_id
 from app.services import run_wih
 from app.utils import get_logger, check_domain_black
 from app.modules import WihRecord

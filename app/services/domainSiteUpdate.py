@@ -2,7 +2,7 @@ import time
 from app.services import build_domain_info,\
     probe_http, fetch_site, BaseUpdateTask
 
-from app.helpers.domain import find_domain_by_task_id
+from app.helpers import find_domain_by_task_id
 
 from app import utils
 

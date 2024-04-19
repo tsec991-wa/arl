@@ -4,9 +4,12 @@ from app.utils import get_logger, auth
 from . import base_query_fields, ARLResource, get_arl_parser
 from app.modules import ErrorMsg, TaskTag
 from app import utils, services
-from app.helpers.asset_site import find_asset_site_not_in_scope
-from app.helpers.task import target2list, submit_add_asset_site_task
-from app.helpers.policy import get_options_by_policy_id
+from app.helpers import (
+    find_asset_site_not_in_scope,
+    submit_add_asset_site_task,
+    target2list,
+    get_options_by_policy_id
+)
 
 ns = Namespace('asset_site', description="资产组站点信息")
 

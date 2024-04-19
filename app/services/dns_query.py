@@ -1,6 +1,6 @@
 import logging
 import time
-
+import concurrent.futures
 from app import utils
 from app.config import Config
 
@@ -74,6 +74,45 @@ class DNSQueryBase(object):
         return subdomains
 
 
+def run_plugin(p, target) -> (str, list):
+    """
+    运行单个插件
+    """
+    logger = utils.get_logger()
+    try:
+        query_key = Config.QUERY_PLUGIN_CONFIG
+        source_name = p.source_name
+        source_kwargs = query_key.get(source_name, {})
+        if source_kwargs:
+            if not isinstance(source_kwargs, dict):
+                logger.warning(f"{source_name} config {source_kwargs} is not dict")
+                return source_name, []
+
+            plugin_enable_flag = source_kwargs.pop("enable", True)
+            if not plugin_enable_flag:
+                logger.debug(f"skip {source_name}, enable is set false")
+                return source_name, []
+
+            if source_kwargs:
+                if all(source_kwargs.values()):
+                    p.init_key(**source_kwargs)
+                else:
+                    logger.debug(f"skip {source_name}, config is not set")
+                    return source_name, []
+
+        results = p.query(target)
+        logger.debug(f"run {source_name} target:{target}, result:{len(results)}")
+        return source_name, results
+
+    except Exception as e:
+        error_str = str(e)
+        if "please set fofa key" in error_str:
+            logger.debug(error_str)
+        else:
+            logger.error(f"{p.source_name} error {type(e)} {error_str}")
+        return []
+
+
 # *****  执行域名查询插件
 """
 返回: [{
@@ -81,9 +120,6 @@ class DNSQueryBase(object):
     "source": "crtsh"
 }]
 """
-
-
-# *********
 
 
 def run_query_plugin(target, sources=None):
@@ -97,57 +133,30 @@ def run_query_plugin(target, sources=None):
         sources = []
 
     plugins = utils.load_query_plugins(Config.dns_query_plugin_path)
-    query_key = Config.QUERY_PLUGIN_CONFIG
     logger = utils.get_logger()
     ret = []
     subdomains = set()
     t1 = time.time()
-    for p in plugins:
-        try:
-            source_name = p.source_name
-            if sources and source_name not in sources:
-                continue
 
-            # ***　查看是否有配置
-            if query_key.get(source_name):
-                source_kwargs = query_key[source_name]
-                if not isinstance(source_kwargs, dict):
-                    logger.warning("{} config {} is not dict".format(source_name, source_kwargs))
-                    continue
+    if sources:
+        plugins = [p for p in plugins if p.source_name in sources]
 
-                # 插件是否启用， 没有配置 enable 这个字段默认启用
-                plugin_enable_flag = source_kwargs.pop("enable", None)
-                if plugin_enable_flag is not None:
-                    if not plugin_enable_flag:
-                        logger.debug("skip {}, enable is set false".format(source_name))
-                        continue
+    logger.debug(f"load plugins len:{len(plugins)} sources: {sources}")
 
-                # 判断是否为空，为空就跳过 init_key 调用
-                if source_kwargs:
-                    if all(source_kwargs.values()):
-                        p.init_key(**source_kwargs)
-                    else:
-                        logger.debug("skip {}, config is not set".format(source_name))
-                        continue
-
-            logger.debug("run {} target:{}".format(source_name, target))
-            results = p.query(target)
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = {executor.submit(run_plugin, p, target): p for p in plugins}
+        for future in concurrent.futures.as_completed(futures):
+            source_name, results = future.result()
             for result in results:
                 if result in subdomains:
                     continue
+
                 item = {
                     "domain": result,
                     "source": source_name
                 }
                 ret.append(item)
                 subdomains.add(result)
-
-        except Exception as e:
-            error_str = str(e)
-            if "please set fofa key" in error_str:
-                logger.debug(error_str)
-            else:
-                logger.error("{} error {} {}".format(p.source_name, type(e), str(e)))
 
     t2 = time.time()
     logger.info("{} subdomains result {} ({:.2f}s)".format(target, len(subdomains), t2 - t1))

@@ -39,6 +39,15 @@ base_search_task_fields = {
     'options.nuclei_scan': fields.Boolean(description="是否开启nuclei 扫描"),
     'options.findvhost': fields.Boolean(description="是否开启Host碰撞检测"),
     'options.web_info_hunter': fields.Boolean(description="是否开启 webInfoHunter"),
+    'statistic.site_cnt': fields.Integer(description="站点数量等于"),
+    'statistic.site_cnt__gt': fields.Integer(description="站点数量大于"),
+    'statistic.site_cnt__lt': fields.Integer(description="站点数量小于"),
+    'statistic.domain_cnt': fields.Integer(description="域名数量等于"),
+    'statistic.domain_cnt__gt': fields.Integer(description="域名数量大于"),
+    'statistic.domain_cnt__lt': fields.Integer(description="域名数量小于"),
+    'statistic.wih_cnt': fields.Integer(description="WIH 数量等于"),
+    'statistic.wih_cnt__gt': fields.Integer(description="WIH 数量大于"),
+    'statistic.wih_cnt__lt': fields.Integer(description="WIH 数量小于"),
 }
 
 base_search_task_fields.update(base_query_fields)
@@ -171,9 +180,9 @@ def stop_task(task_id):
 
     control.revoke(celery_id, signal='SIGTERM', terminate=True)
 
-    utils.conn_db('task').update_one({'_id': ObjectId(task_id)}, {"$set": {"status": TaskStatus.STOP}})
-
-    utils.conn_db('task').update_one({'_id': ObjectId(task_id)}, {"$set": {"end_time": utils.curr_date()}})
+    # 这里还是强制更新一下状态
+    update_data = {"$set": {"status": TaskStatus.STOP, "end_time": utils.curr_date()}}
+    utils.conn_db('task').update_one({'_id': ObjectId(task_id)}, update_data)
 
     return utils.build_ret(ErrorMsg.Success, {"task_id": task_id})
 

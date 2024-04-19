@@ -25,7 +25,7 @@ from .cdn import get_cdn_name_by_cname, get_cdn_name_by_ip
 from .device import device_info
 from .cron import check_cron, check_cron_interval
 from .query_loader import load_query_plugins
-
+import re
 
 def load_file(path):
     with open(path, "r+", encoding="utf-8") as f:
@@ -207,6 +207,29 @@ def truncate_string(s):
         return truncated_string + "..."
     else:
         return s
+
+
+def is_valid_exclude_ports(exclude_ports):
+    """
+    检查 nmap 中的排除端口范围是否合法
+    """
+    port_pattern = r'(\d+(-\d+)?,?)+'
+
+    match = re.fullmatch(port_pattern, exclude_ports)
+
+    if match:
+        parts = exclude_ports.split(',')
+        for part in parts:
+            if '-' in part:
+                start, end = map(int, part.split('-'))
+                if start > end or not (0 <= start <= 65535) or not (0 <= end <= 65535):
+                    return False
+            else:
+                if not (0 <= int(part) <= 65535):
+                    return False
+        return True
+    else:
+        return False
 
 
 from .user import user_login, user_login_header, auth, user_logout, change_pass

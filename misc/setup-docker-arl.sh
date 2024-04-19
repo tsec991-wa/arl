@@ -8,8 +8,6 @@ if [ ! -f /usr/local/bin/pip3.6 ]; then
   pip3.6 install --upgrade pip
 fi
 
-pip3.6 install docker-compose
-
 echo "remove docker ..."
 yum remove docker \
                   docker-client \
@@ -43,8 +41,8 @@ fi
 cd ARL/docker
 
 echo "pull images ..."
-docker-compose pull
+docker compose pull
 echo "start arl ..."
 docker volume create arl_db
-docker-compose up -d
+docker compose up -d
 echo "done ."

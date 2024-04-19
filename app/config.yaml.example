@@ -61,8 +61,10 @@ GEOIP:
 #Fofa API 配置项
 FOFA:
   URL: "https://fofa.info"
-  EMAIL: ""
+  EMAIL: "已经不需要配置了"
   KEY: ""
+  MAX_PAGE: 5
+  PAGE_SIZE: 2000
 
 #*** 监控任务消息推送配置 ****
 #监控任务消息推送配置，支持钉钉，飞书，企业微信，邮件

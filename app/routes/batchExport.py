@@ -126,6 +126,23 @@ class BatchExportCIP(ARLResource):
         return response
 
 
+@ns.route('/wih/')
+class BatchExportWIH(ARLResource):
+
+    @auth
+    @ns.expect(batch_export_fields)
+    def post(self):
+        """
+        WIH 批量导出
+        """
+        args = self.parse_args(batch_export_fields)
+        task_id_list = args.get("task_id", [])
+
+        response = self.send_batch_export_file(task_id_list, "wih")
+
+        return response
+
+
 scope_batch_export_fields = ns.model('ScopeBatchExport',  {
     "scope_id": fields.List(fields.String(description="资产分组 ID"), required=True),
 })

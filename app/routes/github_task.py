@@ -138,8 +138,7 @@ class StopARLGithubTask(ARLResource):
 
             control.revoke(celery_id, signal='SIGTERM', terminate=True)
 
-            utils.conn_db('github_task').update_one({'_id': ObjectId(task_id)}, {"$set": {"status": TaskStatus.STOP}})
-
-            utils.conn_db('github_task').update_one({'_id': ObjectId(task_id)}, {"$set": {"end_time": utils.curr_date()}})
+            update_data = {"$set": {"status": TaskStatus.STOP, "end_time": utils.curr_date()}}
+            utils.conn_db('github_task').update_one({'_id': ObjectId(task_id)}, update_data)
 
         return utils.build_ret(ErrorMsg.Success, {"_id": task_id_list})

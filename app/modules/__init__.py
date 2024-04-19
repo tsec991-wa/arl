@@ -134,6 +134,11 @@ class WebSiteFetchStatus:
     Info_Hunter = "web_info_hunter"  # 对 JS 调用WebInfoHunter
 
 
+class CeleryRoutingKey:
+    ASSET_TASK = "arltask"
+    GITHUB_TASK = "arlgithub"
+
+
 class CeleryAction:
     """celery任务celery_action字段"""
 
@@ -410,8 +415,11 @@ error_map = {
     "RuleAlreadyExists": {
         "message": "规则已存在",
         "code": 1609,
-    }
-
+    },
+    "ExcludePortsInvalid": {
+        "message": "nmap 排除端口错误",
+        "code": 1610,
+    },
 }
 
 
@@ -475,4 +483,5 @@ class ErrorMsg:
     DomainSiteViaJob = error_map["DomainSiteViaJob"]
     AddAssetSiteNotSupportIP = error_map["AddAssetSiteNotSupportIP"]
     RuleAlreadyExists = error_map["RuleAlreadyExists"]
+    ExcludePortsInvalid = error_map["ExcludePortsInvalid"]
 

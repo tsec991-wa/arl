@@ -39,12 +39,12 @@
 ```
 cd /opt/
 mkdir docker_arl
-wget -O docker_arl/docker.zip https://github.com/TophantTechnology/ARL/releases/download/v2.6.1/docker.zip
+wget -O docker_arl/docker.zip https://github.com/TophantTechnology/ARL/releases/download/v2.6.2/docker.zip
 cd docker_arl
 unzip -o docker.zip
 docker volume create arl_db
-docker-compose pull
-docker-compose up -d
+docker compose pull
+docker compose up -d
 ```
 
 
@@ -160,15 +160,6 @@ chmod +x setup-arl.sh
 ./setup-arl.sh
 ```
 
-
-### Docker 环境安装
-
-仅仅适配了 centos 7 ，且灯塔安装目录为/opt/ARL
-```
-wget https://raw.githubusercontent.com/TophantTechnology/ARL/master/misc/setup-docker-arl.sh
-chmod +x setup-docker-arl.sh
-./setup-docker-arl.sh
-```
 
 ### FAQ
 

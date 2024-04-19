@@ -30,7 +30,7 @@ class NucleiScan(object):
     def _check_json_flag(self):
         json_flag = ["-json", "-jsonl"]
         for x in json_flag:
-            command = [self.nuclei_bin_path, x]
+            command = [self.nuclei_bin_path, "-duc", x, "-version"]
             pro = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             if pro.returncode == 0:
                 self.nuclei_json_flag = x

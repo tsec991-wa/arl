@@ -1,5 +1,5 @@
 from app import utils
-from app.utils import nmap
+from app.utils import nmap, is_valid_exclude_ports
 from app.config import Config
 
 logger = utils.get_logger()
@@ -7,7 +7,9 @@ logger = utils.get_logger()
 
 class PortScan:
     def __init__(self, targets, ports=None, service_detect=False, os_detect=False,
-                 port_parallelism=None, port_min_rate=None, custom_host_timeout=None):
+                 port_parallelism=None, port_min_rate=None, custom_host_timeout=None,
+                 exclude_ports=None,
+                 ):
         self.targets = " ".join(targets)
         self.ports = ports
         self.max_host_group = 32
@@ -17,6 +19,7 @@ class PortScan:
         self.host_timeout = 60*5
         self.parallelism = port_parallelism  # 默认 32
         self.min_rate = port_min_rate  # 默认64
+        self.exclude_ports = exclude_ports
 
         if service_detect:
             self.host_timeout += 60 * 5
@@ -54,6 +57,11 @@ class PortScan:
         self.nmap_arguments += " --host-timeout {}s".format(self.host_timeout)
         self.nmap_arguments += " --min-parallelism {}".format(self.parallelism)
         self.nmap_arguments += " --max-retries {}".format(self.max_retries)
+
+        if self.exclude_ports is not None:
+            if self.exclude_ports != "" and\
+                    is_valid_exclude_ports(self.exclude_ports):
+                self.nmap_arguments += " --exclude-ports {}".format(self.exclude_ports)
 
     def run(self):
         logger.info("nmap target {}  ports {}  arguments {}".format(
@@ -104,10 +112,12 @@ class PortScan:
 
 
 def port_scan(targets, ports=Config.TOP_10, service_detect=False, os_detect=False,
-              port_parallelism=32, port_min_rate=64, custom_host_timeout=None):
+              port_parallelism=32, port_min_rate=64, custom_host_timeout=None, exclude_ports=None):
     targets = list(set(targets))
     targets = list(filter(utils.not_in_black_ips, targets))
     ps = PortScan(targets=targets, ports=ports, service_detect=service_detect, os_detect=os_detect,
                   port_parallelism=port_parallelism, port_min_rate=port_min_rate,
-                  custom_host_timeout=custom_host_timeout)
+                  custom_host_timeout=custom_host_timeout,
+                  exclude_ports=exclude_ports,
+                  )
     return ps.run()
