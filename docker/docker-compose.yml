@@ -6,7 +6,7 @@ volumes:
 
 services:
     web:
-        image: tophant/arl:${ARL_VERSION:-latest}
+        image: tsec991-wa/tea:${ARL_VERSION:-latest}
         container_name: arl_web
         restart: unless-stopped
         depends_on:
@@ -27,7 +27,7 @@ services:
           - TZ=Asia/Shanghai
 
     worker:
-        image: tophant/arl:${ARL_VERSION:-latest}
+        image: tsec991-wa/tea:${ARL_VERSION:-latest}
         container_name: arl_worker
         restart: unless-stopped
         depends_on:
@@ -39,15 +39,15 @@ services:
           - ./image:/code/app/tmp_screenshot
           - ./poc:/opt/ARL-NPoC/xing/plugins/upload_poc
         entrypoint: ["sh", "-c", "wait-for-it.sh mongodb:27017; wait-for-it.sh rabbitmq:5672;
-        celery -A app.celerytask.celery worker -l info -Q arlgithub -n arlgithub -c 2 -O fair -f arl_worker.log &
-         celery -A app.celerytask.celery worker -l info -Q arltask -n arltask -c 2 -O fair -f arl_worker.log"]
+        celery -A app.celerytask.celery worker -l info -Q arlgithub -n arlgithub -c 10 -O fair -f arl_worker.log &
+         celery -A app.celerytask.celery worker -l info -Q arltask -n arltask -c 10 -O fair -f arl_worker.log"]
 
         environment:
           - LANG=en_US.UTF-8
           - TZ=Asia/Shanghai
 
     scheduler:
-      image: tophant/arl:${ARL_VERSION:-latest}
+      image: tsec991-wa/tea:${ARL_VERSION:-latest}
       container_name: arl_scheduler
       restart: unless-stopped
       depends_on:
