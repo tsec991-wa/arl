@@ -8,7 +8,7 @@ RUN python3.6 -m ensurepip --default-pip
 
 RUN pip3.6 install pip --upgrade
 
-RUN rpm -vhU https://nmap.org/dist/nmap-7.93-1.x86_64.rpm
+RUN rpm -vhU https://nmap.org/dist/nmap-7.95-2.x86_64.rpm
 
 RUN yum install python36-devel gcc-c++ -y
 
