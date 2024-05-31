@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_URL: tophant/arl
+  IMAGE_URL: tsec991-wa/tea
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -36,13 +36,13 @@ jobs:
 
       - name: Download ncrack
         run: |
-          wget -O docker/ncrack  https://github.com/1c3z/arl_files/raw/master/ncrack
-          wget -O docker/ncrack-services https://github.com/1c3z/arl_files/raw/master/ncrack-services
+          wget -O docker/ncrack  https://github.com/tsec991-wa/arl_files/raw/master/ncrack
+          wget -O docker/ncrack-services https://github.com/tsec991-wa/arl_files/raw/master/ncrack-services
           chmod +x docker/ncrack
 
       - name: Download NPoC
         run: |
-          git clone https://github.com/1c3z/ARL-NPoC docker/ARL-NPoC
+          git clone https://github.com/tsec991-wa/ARL-NPoC docker/ARL-NPoC
 
       # Runs a single command using the runners shell
       - name: Login Registry
