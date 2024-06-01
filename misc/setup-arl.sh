@@ -34,7 +34,7 @@ fi
 if ! command -v nmap &> /dev/null
 then
     echo "install nmap-7.95-1 ..."
-    rpm -vhU https://nmap.org/dist/nmap-7.95-1.x86_64.rpm
+    rpm -vhU https://nmap.org/dist/nmap-7.95-2.x86_64.rpm
 fi
 
 
