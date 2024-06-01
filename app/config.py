@@ -47,8 +47,8 @@ class Config(object):
 
     FOFA_KEY = ""
     FOFA_URL = "https://fofa.info"
-    FOFA_MAX_PAGE = 5      # 最大查询页数
-    FOFA_PAGE_SIZE = 2000  # 每页2000条
+    FOFA_MAX_PAGE = 10      # 最大查询页数
+    FOFA_PAGE_SIZE = 10000  # 每页2000条
 
     AUTH = False
     API_KEY = ""
