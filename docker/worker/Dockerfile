@@ -60,7 +60,7 @@ RUN pip3.6 install -r requirements.txt
 ARG NUCLEI_VERSION=3.2.4
 
 # 安装nuclei
-RUN wget -c "https://github.com/adysec/ARL/raw/master/tools/nuclei.zip" \
+RUN wget -c "https://github.com/tsec991-wa/arl_files/blob/master/nuclei.zip" \
     && unzip "nuclei.zip" nuclei \
     && mv nuclei /usr/bin/ \
     && rm -f "nuclei.zip"
